@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Prediction History - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="welcome-section">
+        <h1><i class="fa-solid fa-clock-rotate-left"></i> Prediction History & Applicants</h1>
+        <p>Comprehensive audit log of all processed loan default risk assessments.</p>
+    </div>
+    <div class="header-actions">
+        <a href="{{ url_for('export_csv') }}" class="btn btn-secondary">
+            <i class="fa-solid fa-file-arrow-down"></i> Export to CSV
+        </a>
+        <a href="{{ url_for('new_prediction') }}" class="btn btn-primary">
+            <i class="fa-solid fa-circle-plus"></i> New Prediction
+        </a>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="card history-filter-card">
+    <form method="GET" action="{{ url_for('history') }}" class="history-filter-form">
+        <div class="search-input-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" name="search" placeholder="Search by applicant name or purpose..." value="{{ current_search }}">
+        </div>
+        
+        <div class="filter-pills">
+            <a href="{{ url_for('history', status='All', search=current_search) }}" class="filter-pill {% if current_status == 'All' %}active{% endif %}">
+                All ({{ predictions|length }})
+            </a>
+            <a href="{{ url_for('history', status='Non-Default', search=current_search) }}" class="filter-pill {% if current_status == 'Non-Default' %}active{% endif %}">
+                Approved (Non-Default)
+            </a>
+            <a href="{{ url_for('history', status='Default', search=current_search) }}" class="filter-pill {% if current_status == 'Default' %}active{% endif %}">
+                High Risk (Default)
+            </a>
+        </div>
+        
+        {% if current_search %}
+        <a href="{{ url_for('history') }}" class="btn-clear-filter"><i class="fa-solid fa-xmark"></i> Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- History Table -->
+<div class="card recent-predictions-card">
+    <div class="table-responsive">
+        <table class="predictions-table full-table">
+            <thead>
+                <tr>
+                    <th># ID</th>
+                    <th>Applicant Name</th>
+                    <th>Employment</th>
+                    <th>Monthly Income</th>
+                    <th>Credit Score</th>
+                    <th>Loan Amount</th>
+                    <th>Term</th>
+                    <th>Prediction</th>
+                    <th>Risk Probability</th>
+                    <th>Assessed Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if predictions %}
+                    {% for p in predictions %}
+                    <tr class="clickable-row">
+                        <td><code>#{{ p.id }}</code></td>
+                        <td><strong>{{ p.applicant_name }}</strong></td>
+                        <td>{{ p.employment_type }}</td>
+                        <td>₹ {{ "{:,.0f}".format(p.monthly_income) }}</td>
+                        <td>
+                            <span class="score-pill {% if p.credit_score >= 700 %}high{% elif p.credit_score >= 600 %}mid{% else %}low{% endif %}">
+                                {{ p.credit_score }}
+                            </span>
+                        </td>
+                        <td>₹ {{ "{:,.0f}".format(p.loan_amount) }}</td>
+                        <td>{{ p.loan_term }} mo</td>
+                        <td>
+                            {% if p.prediction == 'Default' %}
+                                <span class="badge badge-default">Default</span>
+                            {% else %}
+                                <span class="badge badge-success">Non-Default</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="progress-cell">
+                                <span class="prob-text">{{ "%.2f"|format(p.default_probability * 100) }}%</span>
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar {{ 'bg-red' if p.default_probability >= 0.5 else 'bg-green' }}" 
+                                         style="width: {{ (p.default_probability * 100)|round(2) }}%"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-muted">{{ p.formatted_date }}</td>
+                        <td>
+                            <a href="{{ url_for('view_prediction', prediction_id=p.id) }}" class="btn-view-detail" title="View Full XAI Report">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="11" style="text-align:center; padding: 40px; color: var(--text-muted);">
+                            <i class="fa-solid fa-inbox" style="font-size: 32px; display: block; margin-bottom: 12px;"></i>
+                            No loan prediction records match the criteria.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

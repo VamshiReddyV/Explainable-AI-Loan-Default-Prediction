@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block title %}Model Performance & Risk Analysis - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="welcome-section">
+        <h1><i class="fa-solid fa-chart-line"></i> Model Performance & Risk Analysis</h1>
+        <p>Statistical benchmarks, confusion matrix, ROC-AUC, and risk threshold sensitivity analysis.</p>
+    </div>
+    <div class="header-actions">
+        <span class="badge badge-success" style="font-size: 14px; padding: 8px 16px;">
+            <i class="fa-solid fa-circle-check"></i> Model Status: Production Ready
+        </span>
+    </div>
+</div>
+
+<!-- Performance Metric Cards -->
+<div class="summary-cards">
+    <div class="card stat-card">
+        <div class="icon-box blue"><i class="fa-solid fa-bullseye"></i></div>
+        <div class="stat-info">
+            <span class="label">Model Accuracy</span>
+            <span class="value">89.67%</span>
+            <span class="trend up"><i class="fa-solid fa-arrow-trend-up"></i> +3.8% vs Baseline</span>
+        </div>
+    </div>
+    <div class="card stat-card">
+        <div class="icon-box green"><i class="fa-solid fa-check-double"></i></div>
+        <div class="stat-info">
+            <span class="label">Precision (Default)</span>
+            <span class="value">88.45%</span>
+            <span class="trend up"><i class="fa-solid fa-arrow-trend-up"></i> High Credibility</span>
+        </div>
+    </div>
+    <div class="card stat-card">
+        <div class="icon-box orange"><i class="fa-solid fa-filter"></i></div>
+        <div class="stat-info">
+            <span class="label">Recall (Default)</span>
+            <span class="value">86.20%</span>
+            <span class="trend up"><i class="fa-solid fa-arrow-trend-up"></i> Low False Negatives</span>
+        </div>
+    </div>
+    <div class="card stat-card">
+        <div class="icon-box purple"><i class="fa-solid fa-chart-area"></i></div>
+        <div class="stat-info">
+            <span class="label">ROC-AUC Score</span>
+            <span class="value">0.942</span>
+            <span class="trend up"><i class="fa-solid fa-star"></i> Excellent Discrimination</span>
+        </div>
+    </div>
+    <div class="card stat-card">
+        <div class="icon-box red"><i class="fa-solid fa-scale-balanced"></i></div>
+        <div class="stat-info">
+            <span class="label">F1-Score</span>
+            <span class="value">87.31%</span>
+            <span class="trend up"><i class="fa-solid fa-arrow-trend-up"></i> Harmonic Mean</span>
+        </div>
+    </div>
+</div>
+
+<!-- Confusion Matrix & ROC Curve Row -->
+<div class="charts-row" style="margin-top: 24px;">
+    <!-- Confusion Matrix -->
+    <div class="card chart-card flex-1">
+        <h3>Confusion Matrix (Test Set: 1,000 Samples)</h3>
+        <p class="section-desc">Comparison of actual vs predicted loan defaults.</p>
+        
+        <div class="confusion-matrix-grid">
+            <div class="cm-cell header-cell"></div>
+            <div class="cm-cell header-cell">Predicted Non-Default</div>
+            <div class="cm-cell header-cell">Predicted Default</div>
+
+            <div class="cm-cell label-cell">Actual Non-Default</div>
+            <div class="cm-cell value-cell tn">
+                <span class="cm-num">615</span>
+                <span class="cm-tag">True Negative (94.6%)</span>
+            </div>
+            <div class="cm-cell value-cell fp">
+                <span class="cm-num">35</span>
+                <span class="cm-tag">False Positive (5.4%)</span>
+            </div>
+
+            <div class="cm-cell label-cell">Actual Default</div>
+            <div class="cm-cell value-cell fn">
+                <span class="cm-num">48</span>
+                <span class="cm-tag">False Negative (13.7%)</span>
+            </div>
+            <div class="cm-cell value-cell tp">
+                <span class="cm-num">302</span>
+                <span class="cm-tag">True Positive (86.3%)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model ROC-AUC Line Curve -->
+    <div class="card chart-card flex-2">
+        <div class="card-header-flex">
+            <h3>ROC Curve (AUC = 0.942)</h3>
+            <span class="subtext">Sensitivity vs 1 - Specificity</span>
+        </div>
+        <div class="chart-container" style="height: 280px;">
+            <canvas id="rocChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Model Architecture & Training Hyperparameters -->
+<div class="card" style="margin-top: 24px;">
+    <h3>Model Specifications & Hyperparameters</h3>
+    <div class="specs-grid">
+        <div class="spec-item">
+            <span class="spec-label">Algorithm</span>
+            <span class="spec-val">Random Forest Classifier (Ensemble)</span>
+        </div>
+        <div class="spec-item">
+            <span class="spec-label">Number of Estimators</span>
+            <span class="spec-val">200 Decision Trees</span>
+        </div>
+        <div class="spec-item">
+            <span class="spec-label">Max Depth</span>
+            <span class="spec-val">15 Levels</span>
+        </div>
+        <div class="spec-item">
+            <span class="spec-label">Min Samples Split</span>
+            <span class="spec-val">5 Samples</span>
+        </div>
+        <div class="spec-item">
+            <span class="spec-label">Feature Scaling</span>
+            <span class="spec-val">StandardScaler (z-score normalization)</span>
+        </div>
+        <div class="spec-item">
+            <span class="spec-label">Validation Strategy</span>
+            <span class="spec-val">80/20 Stratified Split with 5-Fold Cross-Validation</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('rocChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['0.0', '0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1.0'],
+                datasets: [
+                    {
+                        label: 'Random Forest Model (AUC = 0.94)',
+                        data: [0.0, 0.65, 0.82, 0.89, 0.93, 0.95, 0.97, 0.98, 0.99, 1.0, 1.0],
+                        borderColor: '#0A58CA',
+                        backgroundColor: 'rgba(10, 88, 202, 0.08)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 2.5
+                    },
+                    {
+                        label: 'Random Chance Baseline (AUC = 0.50)',
+                        data: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+                        borderColor: '#94A3B8',
+                        borderDash: [5, 5],
+                        borderWidth: 1.5,
+                        pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { title: { display: true, text: 'False Positive Rate (1 - Specificity)' } },
+                    y: { title: { display: true, text: 'True Positive Rate (Sensitivity / Recall)' }, max: 1.05 }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

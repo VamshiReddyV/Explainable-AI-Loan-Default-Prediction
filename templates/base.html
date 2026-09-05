@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LoanPredict AI - Explainable AI Platform{% endblock %}</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome 6 Pro/Free -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js 4.4 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-chart-simple"></i>
+                </div>
+                <div class="logo-text">
+                    <h2>LoanPredict AI</h2>
+                    <span class="subtext">Explainable AI Platform</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section-label">MAIN MENU</div>
+                <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('new_prediction') }}" class="nav-item {% if request.endpoint == 'new_prediction' %}active{% endif %}">
+                    <i class="fa-solid fa-circle-plus"></i>
+                    <span>New Loan Prediction</span>
+                </a>
+                <a href="{{ url_for('history') }}" class="nav-item {% if request.endpoint == 'history' %}active{% endif %}">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>My Predictions</span>
+                </a>
+                <a href="{{ url_for('model_performance') }}" class="nav-item {% if request.endpoint == 'model_performance' %}active{% endif %}">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Risk Analysis</span>
+                </a>
+
+                <div class="nav-section-label">EXPLAINABILITY</div>
+                <a href="{{ url_for('explainability') }}" class="nav-item {% if request.endpoint == 'explainability' %}active{% endif %}">
+                    <i class="fa-solid fa-asterisk"></i>
+                    <span>SHAP Explanation</span>
+                </a>
+                <a href="{{ url_for('explainability') }}#lime" class="nav-item">
+                    <i class="fa-solid fa-crosshairs"></i>
+                    <span>LIME Explanation</span>
+                </a>
+
+                <div class="nav-section-label">ACCOUNT</div>
+                <a href="{{ url_for('history') }}" class="nav-item">
+                    <i class="fa-regular fa-user"></i>
+                    <span>Profile</span>
+                </a>
+                <a href="{{ url_for('about') }}" class="nav-item {% if request.endpoint == 'about' %}active{% endif %}">
+                    <i class="fa-regular fa-circle-question"></i>
+                    <span>About Project</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="footer-card">
+                    <div class="footer-badge-icon">
+                        <div class="gauge-graphic">
+                            <i class="fa-solid fa-gauge-high"></i>
+                            <div class="shield-badge"><i class="fa-solid fa-shield-check"></i></div>
+                        </div>
+                    </div>
+                    <p class="footer-text">AI Powered. Transparent.<br><strong>Smarter Lending Decisions.</strong></p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+
+    <!-- Main JavaScript Bundle -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

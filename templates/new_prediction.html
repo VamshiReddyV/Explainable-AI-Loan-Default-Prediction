@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+
+{% block title %}New Loan Prediction - LoanPredict AI{% endblock %}
+
+{% block content %}
+<!-- Top Header -->
+<div class="dashboard-header form-header">
+    <div class="welcome-section">
+        <div class="form-title-group">
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" title="Toggle Navigation">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div>
+                <h1>New Loan Prediction</h1>
+                <p>Provide details to get an AI-powered loan default risk assessment.</p>
+            </div>
+        </div>
+    </div>
+    <div class="header-actions">
+        <div class="notification-bell">
+            <i class="fa-regular fa-bell"></i>
+            <span class="badge-dot"></span>
+        </div>
+        <div class="user-profile">
+            <div class="avatar"><i class="fa-solid fa-user"></i></div>
+            <div class="user-info">
+                <span class="user-name">User</span>
+                <i class="fa-solid fa-chevron-down"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="form-container-wrapper">
+    <div class="main-form-content">
+        <!-- 5-Step Horizontal Progress Stepper -->
+        <div class="progress-tracker" id="formStepper">
+            <div class="step active" data-step="1">
+                <div class="step-circle">1</div>
+                <div class="step-label">Personal<br>Details</div>
+            </div>
+            <div class="step-line" data-line="1"></div>
+            
+            <div class="step" data-step="2">
+                <div class="step-circle">2</div>
+                <div class="step-label">Employment &<br>Income</div>
+            </div>
+            <div class="step-line" data-line="2"></div>
+            
+            <div class="step" data-step="3">
+                <div class="step-circle">3</div>
+                <div class="step-label">Loan<br>Details</div>
+            </div>
+            <div class="step-line" data-line="3"></div>
+            
+            <div class="step" data-step="4">
+                <div class="step-circle">4</div>
+                <div class="step-label">Financial &<br>Credit Details</div>
+            </div>
+            <div class="step-line" data-line="4"></div>
+            
+            <div class="step" data-step="5">
+                <div class="step-circle">5</div>
+                <div class="step-label">Review &<br>Submit</div>
+            </div>
+        </div>
+
+        <form class="prediction-form" id="loanForm" novalidate>
+            <!-- Step 1: Personal Details -->
+            <div class="wizard-step-panel active" id="panel-step-1">
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon blue"><i class="fa-regular fa-user"></i></div>
+                        <h2>1. Personal Details</h2>
+                    </div>
+                    <p class="section-desc">Provide basic information about the applicant.</p>
+                    
+                    <div class="form-grid">
+                        <div class="form-group span-2">
+                            <label for="fullName">Full Name <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <i class="fa-regular fa-user"></i>
+                                <input type="text" id="fullName" placeholder="Enter your full name" value="Rahul Sharma" required>
+                            </div>
+                        </div>
+                        <div class="form-group span-2">
+                            <label for="age">Age <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <i class="fa-regular fa-calendar"></i>
+                                <input type="number" id="age" placeholder="e.g. 30" value="32" min="18" max="85" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="gender">Gender <span>(optional)</span></label>
+                            <select id="gender">
+                                <option value="Male" selected>Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="maritalStatus">Marital Status <span>(optional)</span></label>
+                            <select id="maritalStatus">
+                                <option value="Single">Single</option>
+                                <option value="Married" selected>Married</option>
+                                <option value="Divorced">Divorced</option>
+                            </select>
+                        </div>
+                        <div class="form-group span-2">
+                            <label for="dependents">Number of Dependents</label>
+                            <input type="number" id="dependents" value="2" min="0" max="10">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Employment & Income Details -->
+            <div class="wizard-step-panel" id="panel-step-2">
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon green"><i class="fa-solid fa-briefcase"></i></div>
+                        <h2>2. Employment & Income Details</h2>
+                    </div>
+                    <p class="section-desc">Tell us about your employment and income.</p>
+                    
+                    <div class="form-grid">
+                        <div class="form-group span-2">
+                            <label for="employmentType">Employment Type <span class="required">*</span></label>
+                            <select id="employmentType" required>
+                                <option value="Salaried" selected>Salaried</option>
+                                <option value="Self-Employed">Self-Employed</option>
+                                <option value="Freelancer">Freelancer</option>
+                                <option value="Unemployed">Unemployed</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="experience">Employment Experience (Years) <span class="required">*</span></label>
+                            <input type="number" id="experience" placeholder="e.g. 5" value="4" min="0" max="50" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="monthlyIncome">Monthly Income <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-indian-rupee-sign"></i>
+                                <input type="number" id="monthlyIncome" placeholder="e.g. 50000" value="48000" min="5000" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group span-2">
+                            <label for="annualIncome">Annual Income</label>
+                            <div class="input-with-icon disabled">
+                                <i class="fa-solid fa-indian-rupee-sign"></i>
+                                <input type="text" id="annualIncome" value="5,76,000" readonly>
+                            </div>
+                            <small class="help-text green-text"><i class="fa-solid fa-check"></i> Automatically calculated from monthly income</small>
+                        </div>
+                        <div class="form-group span-2">
+                            <label for="additionalIncome">Additional Income <span>(optional)</span></label>
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-indian-rupee-sign"></i>
+                                <input type="number" id="additionalIncome" placeholder="e.g. 5000" value="5000" min="0">
+                            </div>
+                            <small class="help-text">Income from other sources (monthly)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Loan Details -->
+            <div class="wizard-step-panel" id="panel-step-3">
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon purple"><i class="fa-solid fa-building-columns"></i></div>
+                        <h2>3. Loan Details</h2>
+                    </div>
+                    <p class="section-desc">Provide information about the requested loan.</p>
+                    
+                    <div class="form-grid">
+                        <div class="form-group span-2">
+                            <label for="loanAmount">Loan Amount <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-indian-rupee-sign"></i>
+                                <input type="number" id="loanAmount" placeholder="e.g. 500000" value="250000" min="10000" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="loanPurpose">Loan Purpose <span class="required">*</span></label>
+                            <select id="loanPurpose" required>
+                                <option value="Personal" selected>Personal</option>
+                                <option value="Home">Home</option>
+                                <option value="Education">Education</option>
+                                <option value="Business">Business</option>
+                                <option value="Vehicle">Vehicle</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="loanTerm">Loan Term <span class="required">*</span></label>
+                            <select id="loanTerm" required>
+                                <option value="12">12 Months</option>
+                                <option value="24" selected>24 Months</option>
+                                <option value="36">36 Months</option>
+                                <option value="48">48 Months</option>
+                                <option value="60">60 Months</option>
+                                <option value="120">120 Months</option>
+                                <option value="180">180 Months</option>
+                                <option value="240">240 Months</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group span-2">
+                            <label for="interestRate">Interest Rate <span>(if available)</span></label>
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-percent"></i>
+                                <input type="number" id="interestRate" placeholder="e.g. 8.5" step="0.1" value="12.5">
+                            </div>
+                        </div>
+                        <div class="form-group span-2">
+                            <label for="existingLoans">Existing Loans</label>
+                            <input type="number" id="existingLoans" value="2" min="0" max="10">
+                            <small class="help-text">Number of active loans</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Financial & Credit Details -->
+            <div class="wizard-step-panel" id="panel-step-4">
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon blue"><i class="fa-solid fa-credit-card"></i></div>
+                        <h2>4. Financial & Credit Details</h2>
+                    </div>
+                    <p class="section-desc">Provide credit score information for risk assessment.</p>
+                    
+                    <div class="form-grid">
+                        <div class="form-group span-2">
+                            <label for="creditScore">Credit Score (CIBIL) <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <input type="number" id="creditScore" placeholder="e.g. 650" value="580" min="300" max="900" required>
+                            </div>
+                            <small class="help-text">CIBIL Score range: 300 to 900</small>
+                        </div>
+
+                        <div class="credit-score-badges">
+                            <span class="score-badge poor"><i class="fa-solid fa-circle-xmark"></i> &lt; 600: Poor</span>
+                            <span class="score-badge fair"><i class="fa-solid fa-triangle-exclamation"></i> 600-699: Fair</span>
+                            <span class="score-badge good"><i class="fa-solid fa-circle-check"></i> 700-749: Good</span>
+                            <span class="score-badge excellent"><i class="fa-solid fa-star"></i> 750+: Excellent</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: Review & Submit -->
+            <div class="wizard-step-panel" id="panel-step-5">
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon green"><i class="fa-solid fa-list-check"></i></div>
+                        <h2>5. Review & Confirm Submission</h2>
+                    </div>
+                    <p class="section-desc">Review your loan application data before running explainable AI prediction.</p>
+                    
+                    <div class="review-summary-grid" id="reviewSummary">
+                        <!-- Populated dynamically by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wizard Navigation Buttons -->
+            <div class="form-actions wizard-actions">
+                <button type="button" class="btn btn-secondary" id="btnPrevStep" style="display: none;">
+                    <i class="fa-solid fa-arrow-left"></i> Previous
+                </button>
+                <button type="button" class="btn btn-primary" id="btnNextStep">
+                    Continue <i class="fa-solid fa-arrow-right"></i>
+                </button>
+                <button type="submit" class="btn btn-primary btn-submit-prediction" id="btnSubmitPrediction" style="display: none;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Predict Default Risk
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Right Info Sidebar Card -->
+    <div class="form-info-sidebar">
+        <div class="info-card">
+            <div class="info-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h3>Why we need this information?</h3>
+            <p>Your information helps our AI model assess the likelihood of loan default and provide an explainable risk score.</p>
+            
+            <div class="feature-bullet">
+                <div class="icon green-bg">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <div>
+                    <h4>Secure & Private</h4>
+                    <p>Your data is encrypted and kept confidential.</p>
+                </div>
+            </div>
+            
+            <div class="feature-bullet">
+                <div class="icon purple-bg">
+                    <i class="fa-solid fa-microchip"></i>
+                </div>
+                <div>
+                    <h4>AI Powered</h4>
+                    <p>Advanced ML models predict risk accurately.</p>
+                </div>
+            </div>
+            
+            <div class="feature-bullet">
+                <div class="icon blue-bg">
+                    <i class="fa-solid fa-eye"></i>
+                </div>
+                <div>
+                    <h4>Explainable</h4>
+                    <p>Understand why the model makes predictions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

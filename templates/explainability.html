@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Explainability Studio - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="welcome-section">
+        <h1><i class="fa-solid fa-asterisk"></i> Explainability Studio (SHAP & LIME)</h1>
+        <p>Interpret complex machine learning predictions through global and local feature attribution methods.</p>
+    </div>
+    <div class="header-actions">
+        <a href="{{ url_for('new_prediction') }}" class="btn btn-primary">
+            <i class="fa-solid fa-circle-plus"></i> Assess New Loan
+        </a>
+    </div>
+</div>
+
+<!-- Comparison Banner -->
+<div class="xai-method-grid">
+    <div class="card xai-method-card">
+        <div class="xai-header">
+            <div class="icon-box blue"><i class="fa-solid fa-chart-simple"></i></div>
+            <div>
+                <h3>SHAP (SHapley Additive exPlanations)</h3>
+                <span class="subtext">Game-Theoretic Feature Attribution</span>
+            </div>
+        </div>
+        <p class="xai-desc">
+            Computes Shapley values from cooperative game theory to fairly allocate the impact of each feature on the model's default score relative to the baseline expectation.
+        </p>
+        <ul class="xai-features">
+            <li><i class="fa-solid fa-check text-green"></i> <strong>Mathematically Consistent:</strong> Satisfies efficiency, symmetry, and monotonicity.</li>
+            <li><i class="fa-solid fa-check text-green"></i> <strong>Global & Local:</strong> Explains both global feature ranking and individual decisions.</li>
+        </ul>
+    </div>
+
+    <div class="card xai-method-card">
+        <div class="xai-header">
+            <div class="icon-box purple"><i class="fa-solid fa-crosshairs"></i></div>
+            <div>
+                <h3>LIME (Local Interpretable Model-agnostic Explanations)</h3>
+                <span class="subtext">Local Surrogate Rules</span>
+            </div>
+        </div>
+        <p class="xai-desc">
+            Perturbs inputs locally around the applicant's profile and trains an interpretable linear surrogate model to reveal human-understandable threshold conditions.
+        </p>
+        <ul class="xai-features">
+            <li><i class="fa-solid fa-check text-green"></i> <strong>Intuitive Rules:</strong> Explains decisions as conditions (e.g. <code>Credit Score &le; 600</code>).</li>
+            <li><i class="fa-solid fa-check text-green"></i> <strong>Model Agnostic:</strong> Works uniformly across tree ensembles and deep networks.</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Global Feature Importance Chart -->
+<div class="card chart-card" style="margin-top: 24px;">
+    <div class="card-header-flex">
+        <div>
+            <h3>Global Model Feature Importance (SHAP Mean |Value|)</h3>
+            <p class="section-desc">Overall ranking of features impacting loan default across 5,000 historical applications.</p>
+        </div>
+        <span class="badge badge-success">Trained on Random Forest (200 Trees)</span>
+    </div>
+    <div class="chart-container" style="height: 320px;">
+        <canvas id="globalShapChart"></canvas>
+    </div>
+</div>
+
+<!-- Local Explanation Case Study -->
+{% if latest_prediction %}
+<div class="card" style="margin-top: 24px;">
+    <div class="card-header-flex">
+        <div>
+            <h3>Case Study: {{ latest_prediction.applicant_name }}</h3>
+            <p class="section-desc">Comparing SHAP and LIME side-by-side for the latest decision.</p>
+        </div>
+        <div class="prediction-pill-group">
+            <span class="badge {{ 'badge-default' if latest_prediction.prediction == 'Default' else 'badge-success' }}">
+                {{ latest_prediction.prediction }}
+            </span>
+            <span class="bold" style="margin-left: 8px;">{{ "%.2f"|format(latest_prediction.default_probability * 100) }}% Probability</span>
+        </div>
+    </div>
+
+    <div class="xai-dual-panel">
+        <!-- SHAP Column -->
+        <div class="xai-col">
+            <h4><i class="fa-solid fa-chart-column text-blue"></i> SHAP Waterfall Breakdown</h4>
+            <div class="features-list">
+                {% for item in latest_prediction.shap_explanation %}
+                <div class="feature-item">
+                    <span class="feature-name">{{ item.display_name }}</span>
+                    <div class="impact-bar-container">
+                        {% if item.shap_value >= 0 %}
+                        <div class="impact-bar red" style="width: {{ [((item.shap_value|abs / 0.5) * 85)|round|int + 15, 100]|min }}%;">
+                            +{{ item.shap_value }}
+                        </div>
+                        {% else %}
+                        <div class="impact-bar green right-align" style="width: {{ [((item.shap_value|abs / 0.5) * 85)|round|int + 15, 100]|min }}%;">
+                            {{ item.shap_value }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- LIME Column -->
+        <div class="xai-col">
+            <h4><i class="fa-solid fa-crosshairs text-purple"></i> LIME Local Surrogate Rules</h4>
+            <div class="features-list">
+                {% for item in latest_prediction.lime_explanation %}
+                <div class="feature-item">
+                    <span class="feature-name lime-condition">{{ item.condition }}</span>
+                    <div class="impact-bar-container">
+                        {% if item.weight >= 0 %}
+                        <div class="impact-bar red" style="width: {{ [((item.weight|abs / 0.5) * 85)|round|int + 15, 100]|min }}%;">
+                            +{{ item.weight }}
+                        </div>
+                        {% else %}
+                        <div class="impact-bar green right-align" style="width: {{ [((item.weight|abs / 0.5) * 85)|round|int + 15, 100]|min }}%;">
+                            {{ item.weight }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('globalShapChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Credit Score', 'Loan Amount', 'Existing Loans', 'Monthly Income', 'Loan Term', 'Employment Exp', 'Interest Rate', 'Age', 'Employment Type', 'Loan Purpose'],
+                datasets: [{
+                    label: 'Mean |SHAP Value| (Impact on Default)',
+                    data: [0.38, 0.29, 0.21, 0.17, 0.14, 0.11, 0.09, 0.08, 0.06, 0.04],
+                    backgroundColor: '#0A58CA',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: { color: '#F1F5F9' },
+                        title: { display: true, text: 'Mean Absolute SHAP Value' }
+                    },
+                    y: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

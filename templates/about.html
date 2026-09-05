@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}About - LoanPredict AI Platform{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="welcome-section">
+        <h1><i class="fa-solid fa-circle-info"></i> About LoanPredict AI</h1>
+        <p>A production-grade, transparent Machine Learning platform for responsible credit risk assessment.</p>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 24px;">
+    <h3>Problem Statement & Executive Overview</h3>
+    <p class="about-p">
+        Traditional credit underwriting models operate as opaque "black boxes." When a loan applicant is rejected or categorized as high default risk, regulatory standards (such as the <strong>Fair Credit Reporting Act (FCRA)</strong> in the United States and the <strong>General Data Protection Regulation (GDPR Article 22 Right to Explanation)</strong> in Europe) mandate clear, auditable, and actionable adverse action notices.
+    </p>
+    <p class="about-p">
+        <strong>LoanPredict AI</strong> bridges the gap between state-of-the-art predictive accuracy and full regulatory explainability by coupling an ensemble Random Forest classifier with <strong>SHAP (Shapley Additive exPlanations)</strong> and <strong>LIME (Local Interpretable Model-agnostic Explanations)</strong>.
+    </p>
+</div>
+
+<div class="xai-method-grid">
+    <div class="card xai-method-card">
+        <div class="xai-header">
+            <div class="icon-box blue"><i class="fa-solid fa-layer-group"></i></div>
+            <div>
+                <h3>System Architecture</h3>
+                <span class="subtext">Modular Full-Stack Pipeline</span>
+            </div>
+        </div>
+        <ul class="about-list">
+            <li><strong>Frontend:</strong> Responsive UI with dynamic multi-step wizard, Chart.js visualizations, and CSS design system.</li>
+            <li><strong>Backend:</strong> Python Flask REST API orchestrating ML inference and XAI explanations.</li>
+            <li><strong>Model Engine:</strong> Scikit-Learn Random Forest (200 estimators, max depth 15) with StandardScaler normalization.</li>
+            <li><strong>Explainability Layer:</strong> Fast TreeExplainer for SHAP feature attribution and LimeTabularExplainer for local condition rules.</li>
+            <li><strong>Persistence:</strong> Thread-safe SQLite audit store for all historical decisions.</li>
+        </ul>
+    </div>
+
+    <div class="card xai-method-card">
+        <div class="xai-header">
+            <div class="icon-box green"><i class="fa-solid fa-scale-balanced"></i></div>
+            <div>
+                <h3>Regulatory & Ethical Compliance</h3>
+                <span class="subtext">Transparent AI Governance</span>
+            </div>
+        </div>
+        <ul class="about-list">
+            <li><strong>Adverse Action Notice Support:</strong> Instantly isolates the top negative contributing features (e.g. debt-to-income, credit score).</li>
+            <li><strong>Bias & Fairness Auditing:</strong> Gender and marital status features are monitored to guarantee non-discriminatory credit assessment.</li>
+            <li><strong>Auditability:</strong> Every prediction persists with its full mathematical feature contribution vector for retrospective compliance review.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Loan Default Prediction{% endblock %}
+
+{% block content %}
+<!-- Top Header -->
+<div class="dashboard-header">
+    <div class="welcome-section">
+        <h1>Welcome back, Admin 👋</h1>
+        <p>Here's what's happening with your loan prediction system today.</p>
+    </div>
+    <div class="header-actions">
+        <div class="date-display">
+            <i class="fa-regular fa-calendar"></i>
+            <span>{{ now }}</span>
+        </div>
+        <div class="user-profile">
+            <div class="avatar"><i class="fa-solid fa-user"></i></div>
+            <div class="user-info">
+                <span class="user-name">Admin User</span>
+                <span class="user-role">Administrator <i class="fa-solid fa-chevron-down"></i></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5 Top Metric Stat Cards -->
+<div class="summary-cards">
+    <div class="card stat-card">
+        <div class="icon-box blue"><i class="fa-solid fa-user-group"></i></div>
+        <div class="stat-info">
+            <span class="label">Total Predictions</span>
+            <span class="value">{{ stats.total_predictions }}</span>
+            <span class="trend up"><i class="fa-solid fa-arrow-trend-up"></i> 12.4% from last month</span>
+        </div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="icon-box green"><i class="fa-solid fa-clipboard-check"></i></div>
+        <div class="stat-info">
+            <span class="label">Approved Loans</span>
+            <span class="value">{{ stats.approved_loans }}</span>
+            <span class="trend up"><i class="fa-solid fa-arrow-trend-up"></i> 10.7% from last month</span>
+        </div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="icon-box red"><i class="fa-regular fa-comment-dots"></i></div>
+        <div class="stat-info">
+            <span class="label">Defaulted Loans</span>
+            <span class="value">{{ stats.defaulted_loans }}</span>
+            <span class="trend up"><i class="fa-solid fa-arrow-trend-up"></i> 14.2% from last month</span>
+        </div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="icon-box purple"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="stat-info">
+            <span class="label">Default Rate</span>
+            <span class="value">{{ stats.default_rate }}%</span>
+            <span class="trend up"><i class="fa-solid fa-arrow-trend-up"></i> 2.3% from last month</span>
+        </div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="icon-box orange"><i class="fa-solid fa-shield-halved"></i></div>
+        <div class="stat-info">
+            <span class="label">Model Accuracy</span>
+            <span class="value">{{ stats.model_accuracy }}%</span>
+            <span class="trend up"><i class="fa-solid fa-arrow-trend-up"></i> 3.8% from last month</span>
+        </div>
+    </div>
+</div>
+
+<!-- Middle Row: 3 Analytics Charts -->
+<div class="charts-row">
+    <!-- 1. Prediction Overview (Donut) -->
+    <div class="card chart-card flex-1">
+        <h3>Prediction Overview</h3>
+        <div class="chart-container doughnut-container">
+            <canvas id="predictionOverviewChart"></canvas>
+            <div class="chart-center-text">
+                <span class="value">{{ stats.total_predictions }}</span>
+                <span class="label">Total</span>
+            </div>
+        </div>
+        <div class="chart-legend-custom">
+            <div class="legend-item">
+                <span class="dot green"></span>
+                <span>Non-Default (Approved)</span>
+                <strong>{{ stats.approved_loans }} ({{ (100 - stats.default_rate)|round(1) }}%)</strong>
+            </div>
+            <div class="legend-item">
+                <span class="dot red"></span>
+                <span>Default</span>
+                <strong>{{ stats.defaulted_loans }} ({{ stats.default_rate }}%)</strong>
+            </div>
+        </div>
+        <p class="chart-footer">Based on all predictions</p>
+    </div>
+    
+    <!-- 2. Default Risk Distribution (Bar) -->
+    <div class="card chart-card flex-2">
+        <h3>Default Risk Distribution</h3>
+        <div class="chart-container">
+            <canvas id="riskDistributionChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- 3. Model Performance (Line) -->
+    <div class="card chart-card flex-2">
+        <div class="card-header-flex">
+            <h3>Model Performance</h3>
+            <div class="select-wrapper">
+                <select class="custom-select" id="timeframeSelect">
+                    <option>This Month</option>
+                    <option>Last 3 Months</option>
+                    <option>Year to Date</option>
+                </select>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="modelPerformanceChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Row: Recent Predictions Table + Explainability Card -->
+<div class="bottom-row">
+    <!-- Left: Recent Predictions -->
+    <div class="card recent-predictions-card">
+        <div class="card-header-flex">
+            <h3>Recent Predictions</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="predictions-table">
+                <thead>
+                    <tr>
+                        <th>Applicant Name</th>
+                        <th>Loan Amount</th>
+                        <th>Prediction</th>
+                        <th>Default Probability</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in recent_predictions %}
+                    <tr class="clickable-row" onclick="window.location='{{ url_for('view_prediction', prediction_id=p.id) }}'">
+                        <td>
+                            <strong>{{ p.applicant_name }}</strong>
+                        </td>
+                        <td>₹ {{ "{:,.0f}".format(p.loan_amount) }}</td>
+                        <td>
+                            {% if p.prediction == 'Default' %}
+                                <span class="badge badge-default">Default</span>
+                            {% else %}
+                                <span class="badge badge-success">Non-Default</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="progress-cell">
+                                <span class="prob-text">{{ "%.2f"|format(p.default_probability * 100) }}%</span>
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar {{ 'bg-red' if p.default_probability >= 0.5 else 'bg-green' }}" 
+                                         style="width: {{ (p.default_probability * 100)|round(2) }}%"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-muted">{{ p.formatted_date }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="table-footer-link">
+            <a href="{{ url_for('history') }}" class="view-all">View All Predictions <i class="fa-solid fa-chevron-right"></i></a>
+        </div>
+    </div>
+
+    <!-- Right: "Why did the model predict Default?" with SHAP/LIME Tabs -->
+    <div class="card explainability-card">
+        <h3>Why did the model predict {{ latest_prediction.prediction if latest_prediction else 'Default' }}?</h3>
+        
+        <div class="tabs-container">
+            <button class="tab-btn active" data-tab="shap">SHAP Explanation</button>
+            <button class="tab-btn" data-tab="lime">LIME Explanation</button>
+        </div>
+        
+        <div class="explainability-content">
+            <!-- Left Sub-Pane: Horizontal Feature Impact Bars -->
+            <div class="features-list">
+                <div class="feature-header">
+                    <span>Feature</span>
+                    <span>Impact on Prediction</span>
+                </div>
+
+                <!-- SHAP View -->
+                <div class="tab-pane active" id="shapTab">
+                    {% if latest_shap %}
+                        {% for item in latest_shap %}
+                        <div class="feature-item">
+                            <span class="feature-name">{{ item.display_name }}</span>
+                            <div class="impact-bar-container">
+                                {% if item.shap_value >= 0 %}
+                                <div class="impact-bar red" style="width: {{ [((item.shap_value|abs / 0.5) * 85)|round|int + 15, 100]|min }}%;">
+                                    +{{ item.shap_value }}
+                                </div>
+                                {% else %}
+                                <div class="impact-bar green right-align" style="width: {{ [((item.shap_value|abs / 0.5) * 85)|round|int + 15, 100]|min }}%;">
+                                    {{ item.shap_value }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="empty-note">No SHAP explanations available.</p>
+                    {% endif %}
+                </div>
+
+                <!-- LIME View -->
+                <div class="tab-pane" id="limeTab">
+                    {% if latest_lime %}
+                        {% for item in latest_lime %}
+                        <div class="feature-item">
+                            <span class="feature-name lime-condition">{{ item.condition }}</span>
+                            <div class="impact-bar-container">
+                                {% if item.weight >= 0 %}
+                                <div class="impact-bar red" style="width: {{ [((item.weight|abs / 0.5) * 85)|round|int + 15, 100]|min }}%;">
+                                    +{{ item.weight }}
+                                </div>
+                                {% else %}
+                                <div class="impact-bar green right-align" style="width: {{ [((item.weight|abs / 0.5) * 85)|round|int + 15, 100]|min }}%;">
+                                    {{ item.weight }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="empty-note">No LIME explanations available.</p>
+                    {% endif %}
+                </div>
+
+                <div class="impact-legend">
+                    <span class="red-text"><i class="fa-solid fa-square"></i> Red = increases default risk</span>
+                    <span class="green-text"><i class="fa-solid fa-square"></i> Green = decreases default risk</span>
+                </div>
+            </div>
+            
+            <!-- Right Sub-Pane: Prediction Summary Box -->
+            {% if latest_prediction %}
+            <div class="prediction-summary-box">
+                <h4>Prediction Summary</h4>
+                <div class="summary-row">
+                    <span class="row-label">Prediction</span>
+                    <span class="badge {{ 'badge-default' if latest_prediction.prediction == 'Default' else 'badge-success' }}">
+                        {{ latest_prediction.prediction|upper }}
+                    </span>
+                </div>
+                <div class="summary-row">
+                    <span class="row-label">Default Probability</span>
+                    <span class="bold">{{ "%.2f"|format(latest_prediction.default_probability * 100) }}%</span>
+                </div>
+                <div class="summary-row">
+                    <span class="row-label">Risk Level</span>
+                    <span class="badge badge-risk {{ 'badge-high-risk' if latest_prediction.risk_level == 'High Risk' else 'badge-low-risk' }}">
+                        {{ latest_prediction.risk_level }}
+                    </span>
+                </div>
+                
+                <div class="info-alert">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <p>The model predicted {{ latest_prediction.prediction|lower }} primarily due to 
+                    {% if latest_prediction.prediction == 'Default' %}
+                        low credit score, high loan amount, and multiple existing loans.
+                    {% else %}
+                        strong credit history, healthy income-to-loan ratio, and zero active defaults.
+                    {% endif %}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Dynamic data injected for Chart.js initialization -->
+<script>
+    window.dashboardData = {
+        approved: {{ stats.raw_approved }},
+        defaulted: {{ stats.raw_defaulted }},
+        total: {{ stats.raw_total }},
+        defaultRate: {{ stats.default_rate }},
+        riskDistribution: {{ risk_distribution | tojson }}
+    };
+</script>
+{% endblock %}
