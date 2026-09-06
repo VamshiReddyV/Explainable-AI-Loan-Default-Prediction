@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LoanPredict AI - User Portal{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_dashboard.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Overlay (mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- User Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-chart-simple"></i>
+                </div>
+                <div class="logo-text">
+                    <h2>LoanPredict AI</h2>
+                    <span class="subtext">Borrower Portal</span>
+                </div>
+                <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close sidebar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section-label">MAIN MENU</div>
+                <a href="{{ url_for('user_dashboard') }}" class="nav-item {% if request.endpoint == 'user_dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('user_assess') }}" class="nav-item {% if request.endpoint == 'user_assess' %}active{% endif %}">
+                    <i class="fa-solid fa-calculator"></i>
+                    <span>Assess My Loan</span>
+                </a>
+                <a href="{{ url_for('user_apply_loan') }}" class="nav-item {% if request.endpoint == 'user_apply_loan' %}active{% endif %}">
+                    <i class="fa-solid fa-file-circle-plus"></i>
+                    <span>Apply Loan</span>
+                </a>
+                <a href="{{ url_for('user_applications') }}" class="nav-item {% if request.endpoint in ['user_applications', 'user_application_detail'] %}active{% endif %}">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <span>My Applications</span>
+                </a>
+
+                <div class="nav-section-label">EXPLAINABILITY</div>
+                <a href="{{ url_for('user_shap_page') }}" class="nav-item {% if request.endpoint == 'user_shap_page' %}active{% endif %}">
+                    <i class="fa-solid fa-asterisk"></i>
+                    <span>SHAP Explanation</span>
+                </a>
+                <a href="{{ url_for('user_lime_page') }}" class="nav-item {% if request.endpoint == 'user_lime_page' %}active{% endif %}">
+                    <i class="fa-solid fa-crosshairs"></i>
+                    <span>LIME Explanation</span>
+                </a>
+                <a href="{{ url_for('user_comparison_page') }}" class="nav-item {% if request.endpoint == 'user_comparison_page' %}active{% endif %}">
+                    <i class="fa-solid fa-code-compare"></i>
+                    <span>SHAP vs LIME</span>
+                </a>
+
+                <div class="nav-section-label">FINANCIAL HEALTH</div>
+                <a href="{{ url_for('user_financial_profile') }}" class="nav-item {% if request.endpoint == 'user_financial_profile' %}active{% endif %}">
+                    <i class="fa-solid fa-wallet"></i>
+                    <span>Financial Profile</span>
+                </a>
+                <a href="{{ url_for('user_recommendations') }}" class="nav-item {% if request.endpoint == 'user_recommendations' %}active{% endif %}">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Recommendations</span>
+                </a>
+
+                <div class="nav-section-label">ACCOUNT</div>
+                <a href="{{ url_for('user_profile') }}" class="nav-item {% if request.endpoint == 'user_profile' %}active{% endif %}">
+                    <i class="fa-regular fa-user"></i>
+                    <span>My Profile</span>
+                </a>
+                <a href="{{ url_for('user_settings') }}" class="nav-item {% if request.endpoint == 'user_settings' %}active{% endif %}">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="{{ url_for('user_support') }}" class="nav-item {% if request.endpoint == 'user_support' %}active{% endif %}">
+                    <i class="fa-regular fa-circle-question"></i>
+                    <span>Help & Support</span>
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-item">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="footer-card">
+                    <div class="footer-badge-icon">
+                        <div class="gauge-graphic">
+                            <i class="fa-solid fa-gauge-high"></i>
+                        </div>
+                    </div>
+                    <p class="footer-text">AI Powered. Transparent.<br><strong>Smarter Lending Decisions.</strong></p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content" id="mainContent">
+            <!-- Top Bar Header -->
+            <header class="user-topbar">
+                <div class="topbar-left">
+                    <button type="button" class="hamburger-btn" id="hamburgerBtn" aria-label="Open sidebar menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <span class="portal-badge"><i class="fa-solid fa-user-check"></i> Borrower Portal</span>
+                </div>
+                <div class="topbar-right">
+                    <div class="date-badge">
+                        <i class="fa-regular fa-calendar"></i>
+                        <span>{{ now }}</span>
+                    </div>
+                    <div class="user-profile-dropdown" id="userPortalDropdown">
+                        <div class="user-profile" id="userPortalProfileTrigger" tabindex="0">
+                            <div class="avatar bg-blue"><i class="fa-regular fa-user"></i></div>
+                            <div class="user-info">
+                                <span class="user-name">{{ current_user.name if current_user else 'Borrower' }}</span>
+                                <span class="user-role">Applicant <i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                        </div>
+                        <div class="dropdown-menu" id="userPortalDropdownMenu">
+                            <div class="dropdown-header">
+                                <div class="dropdown-avatar"><i class="fa-solid fa-user-circle"></i></div>
+                                <div>
+                                    <strong>{{ current_user.name if current_user else 'Borrower' }}</strong>
+                                    <span>{{ current_user.email if current_user else '' }}</span>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ url_for('user_profile') }}" class="dropdown-item">
+                                <i class="fa-regular fa-user"></i> My Profile
+                            </a>
+                            <a href="{{ url_for('user_financial_profile') }}" class="dropdown-item">
+                                <i class="fa-solid fa-wallet"></i> Financial Profile
+                            </a>
+                            <a href="{{ url_for('user_settings') }}" class="dropdown-item">
+                                <i class="fa-solid fa-sliders"></i> Preferences
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ url_for('logout') }}" class="dropdown-item text-danger">
+                                <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Flash Alerts -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages-container">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                                <i class="fa-solid {{ 'fa-circle-exclamation' if category == 'error' else 'fa-circle-check' }}"></i>
+                                <span>{{ message }}</span>
+                                <button type="button" class="alert-close" onclick="this.parentElement.remove();">&times;</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+
+    <!-- Floating AI Chat Assistant Launcher -->
+    <button type="button" class="ai-chat-launcher" id="aiChatLauncher" aria-label="Open AI Loan Assistant">
+        <i class="fa-solid fa-wand-magic-sparkles" id="aiChatIcon"></i>
+        <span class="chat-launcher-badge"></span>
+    </button>
+
+    <!-- Floating AI Chat Assistant Window -->
+    <div class="ai-chat-window" id="aiChatWindow">
+        <div class="chat-header">
+            <div class="chat-header-profile">
+                <div class="chat-bot-avatar">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div class="chat-header-text">
+                    <h4>LoanPredict AI Assistant</h4>
+                    <span><i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> Online • Instant Answers</span>
+                </div>
+            </div>
+            <div class="chat-header-actions">
+                <button type="button" class="chat-action-btn" id="aiChatClearBtn" title="Clear Chat">
+                    <i class="fa-regular fa-trash-can"></i>
+                </button>
+                <button type="button" class="chat-action-btn" id="aiChatCloseBtn" title="Close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-messages-container" id="chatMessages">
+            <div class="chat-message bot">
+                <div class="chat-bubble">
+                    Hello! 👋 I'm your <strong>LoanPredict AI Assistant</strong>.<br>
+                    I can explain your SHAP/LIME risk factors, simulate loan terms, or advise on how to lower your default probability. What would you like to know?
+                    <span class="chat-timestamp">Just now</span>
+                </div>
+            </div>
+            <div class="typing-indicator" id="chatTyping">
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+            </div>
+        </div>
+
+        <div class="chat-quick-prompts">
+            <button type="button" class="chat-chip" data-query="How to lower default risk?">💡 Lower Risk</button>
+            <button type="button" class="chat-chip" data-query="Explain SHAP vs LIME">🔍 SHAP vs LIME</button>
+            <button type="button" class="chat-chip" data-query="What is a good credit score?">⭐ Good Credit Score</button>
+            <button type="button" class="chat-chip" data-query="How to get lower interest rates?">📉 Lower Interest</button>
+            <button type="button" class="chat-chip" data-query="What causes High Risk?">⚠️ High Risk Drivers</button>
+        </div>
+
+        <form class="chat-input-row" id="chatInputForm" onsubmit="event.preventDefault(); sendChatMessage();">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Ask about loans, SHAP, credit score..." autocomplete="off">
+            <button type="submit" class="chat-send-btn" id="chatSendBtn" aria-label="Send message">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </form>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+    // ===== Scroll Reset on Page Load =====
+    if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+    }
+    window.addEventListener('DOMContentLoaded', function() {
+        window.scrollTo(0, 0);
+        var mc = document.getElementById('mainContent');
+        if (mc) mc.scrollTop = 0;
+    });
+
+    // ===== Mobile Hamburger Sidebar Toggle =====
+    (function() {
+        var hamburger = document.getElementById('hamburgerBtn');
+        var sidebar = document.getElementById('sidebar');
+        var overlay = document.getElementById('sidebarOverlay');
+        var closeBtn = document.getElementById('sidebarCloseBtn');
+
+        function openSidebar() {
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        if (hamburger) hamburger.addEventListener('click', openSidebar);
+        if (overlay) overlay.addEventListener('click', closeSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+    })();
+
+    // ===== User Portal Dropdown Toggle =====
+    const userTrigger = document.getElementById('userPortalProfileTrigger');
+    const userMenu = document.getElementById('userPortalDropdownMenu');
+    if (userTrigger && userMenu) {
+        userTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userMenu.classList.toggle('show');
+        });
+        document.addEventListener('click', (e) => {
+            if (!userTrigger.contains(e.target) && !userMenu.contains(e.target)) {
+                userMenu.classList.remove('show');
+            }
+        });
+    }
+
+    // ===== AI Chat Assistant Widget Logic (Connected to Backend API) =====
+    (function() {
+        const launcher = document.getElementById('aiChatLauncher');
+        const chatWindow = document.getElementById('aiChatWindow');
+        const closeBtn = document.getElementById('aiChatCloseBtn');
+        const clearBtn = document.getElementById('aiChatClearBtn');
+        const chatInput = document.getElementById('chatInput');
+        const chatMessages = document.getElementById('chatMessages');
+        const typingIndicator = document.getElementById('chatTyping');
+        const chips = document.querySelectorAll('.chat-chip');
+
+        if (!launcher || !chatWindow) return;
+
+        function toggleChat() {
+            chatWindow.classList.toggle('open');
+            if (chatWindow.classList.contains('open')) {
+                chatInput.focus();
+                scrollChatToBottom();
+            }
+        }
+
+        launcher.addEventListener('click', toggleChat);
+        closeBtn.addEventListener('click', toggleChat);
+
+        clearBtn.addEventListener('click', () => {
+            chatMessages.querySelectorAll('.chat-message').forEach((m, idx) => {
+                if (idx > 0) m.remove(); // keep welcome
+            });
+        });
+
+        chips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                const query = chip.getAttribute('data-query');
+                chatInput.value = query;
+                sendChatMessage();
+            });
+        });
+
+        function scrollChatToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function getTimeStr() {
+            const now = new Date();
+            return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        window.sendChatMessage = async function() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            // Add user message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'chat-message user';
+            userMsg.innerHTML = `
+                <div class="chat-bubble">
+                    ${escapeHtml(text)}
+                    <span class="chat-timestamp">${getTimeStr()}</span>
+                </div>
+            `;
+            chatMessages.insertBefore(userMsg, typingIndicator);
+            chatInput.value = '';
+            scrollChatToBottom();
+
+            // Show typing indicator
+            typingIndicator.style.display = 'flex';
+            scrollChatToBottom();
+
+            try {
+                const response = await fetch('{{ url_for("user_api_chat") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+                const data = await response.json();
+                typingIndicator.style.display = 'none';
+
+                const botMsg = document.createElement('div');
+                botMsg.className = 'chat-message bot';
+                botMsg.innerHTML = `
+                    <div class="chat-bubble">
+                        ${data.reply || 'Sorry, I could not process your request.'}
+                        <span class="chat-timestamp">${getTimeStr()}</span>
+                    </div>
+                `;
+                chatMessages.insertBefore(botMsg, typingIndicator);
+                scrollChatToBottom();
+            } catch (err) {
+                typingIndicator.style.display = 'none';
+                const errMsg = document.createElement('div');
+                errMsg.className = 'chat-message bot';
+                errMsg.innerHTML = `
+                    <div class="chat-bubble">
+                        Sorry, I'm having trouble connecting. Please try again in a moment.
+                        <span class="chat-timestamp">${getTimeStr()}</span>
+                    </div>
+                `;
+                chatMessages.insertBefore(errMsg, typingIndicator);
+                scrollChatToBottom();
+            }
+        };
+
+        function escapeHtml(string) {
+            const div = document.createElement('div');
+            div.textContent = string;
+            return div.innerHTML;
+        }
+    })();
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

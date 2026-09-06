@@ -1,0 +1,97 @@
+{% extends 'user/user_base.html' %}
+{% block title %}My Applications - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="user-page-header">
+    <div class="header-info">
+        <h1><i class="fa-solid fa-folder-open"></i> My Loan Applications</h1>
+        <p>Track the status and progress of all your submitted loan applications.</p>
+    </div>
+    <div class="header-action">
+        <a href="{{ url_for('user_apply_loan') }}" class="btn-primary">
+            <i class="fa-solid fa-plus"></i> New Application
+        </a>
+    </div>
+</div>
+
+{% if applications %}
+<!-- Applications List -->
+<div class="user-form-card" style="padding: 0; overflow: hidden;">
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Application Code</th>
+                    <th>Loan Type</th>
+                    <th>Amount</th>
+                    <th>Term</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in applications %}
+                <tr>
+                    <td>
+                        <span class="app-code">{{ app.application_code }}</span>
+                    </td>
+                    <td>
+                        <span class="app-type-badge">
+                            {% if app.loan_type == 'Home' %}<i class="fa-solid fa-house"></i>
+                            {% elif app.loan_type == 'Vehicle' %}<i class="fa-solid fa-car"></i>
+                            {% elif app.loan_type == 'Business' %}<i class="fa-solid fa-briefcase"></i>
+                            {% elif app.loan_type == 'Education' %}<i class="fa-solid fa-graduation-cap"></i>
+                            {% elif app.loan_type == 'Land' %}<i class="fa-solid fa-mountain-sun"></i>
+                            {% elif app.loan_type == 'Agricultural' %}<i class="fa-solid fa-tractor"></i>
+                            {% else %}<i class="fa-solid fa-user"></i>
+                            {% endif %}
+                            {{ app.loan_type }}
+                        </span>
+                    </td>
+                    <td><strong>₹{{ '{:,.0f}'.format(app.loan_amount or 0) }}</strong></td>
+                    <td>{{ app.loan_term }} mo</td>
+                    <td>
+                        {% set status_lower = app.status|lower|replace(' ', '_') %}
+                        <span class="status-tag status-{{ status_lower }}">
+                            {% if status_lower == 'submitted' %}<i class="fa-solid fa-paper-plane"></i>
+                            {% elif status_lower == 'under_review' %}<i class="fa-solid fa-magnifying-glass"></i>
+                            {% elif status_lower == 'approved' %}<i class="fa-solid fa-circle-check"></i>
+                            {% elif status_lower == 'rejected' %}<i class="fa-solid fa-circle-xmark"></i>
+                            {% elif status_lower == 'disbursed' %}<i class="fa-solid fa-money-bill-transfer"></i>
+                            {% endif %}
+                            {{ app.status }}
+                        </span>
+                    </td>
+                    <td style="color: var(--user-text-muted); font-size: 0.88rem;">
+                        {{ app.created_at[:10] if app.created_at else '—' }}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('user_application_detail', app_id=app.id) }}" class="btn-outline" style="padding: 0.35rem 0.85rem; font-size: 0.82rem;">
+                            <i class="fa-solid fa-eye"></i> View
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% else %}
+<!-- Empty State -->
+<div class="empty-state-card">
+    <i class="fa-solid fa-folder-open" style="font-size: 3rem; color: var(--user-primary); margin-bottom: 1rem;"></i>
+    <h3>No Applications Yet</h3>
+    <p>You haven't submitted any loan applications yet. Start by assessing your loan eligibility or apply directly.</p>
+    <div style="margin-top: 1.25rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="{{ url_for('user_assess') }}" class="btn-outline">
+            <i class="fa-solid fa-calculator"></i> Assess My Loan
+        </a>
+        <a href="{{ url_for('user_apply_loan') }}" class="btn-primary">
+            <i class="fa-solid fa-file-circle-plus"></i> Apply Now
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

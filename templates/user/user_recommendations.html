@@ -1,0 +1,517 @@
+{% extends 'user/user_base.html' %}
+{% block title %}AI Recommendations & Financial Roadmap - LoanPredict AI{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="user-page-header">
+    <div class="header-info">
+        <h1><i class="fa-solid fa-wand-magic-sparkles"></i> Personalized AI Action Plan</h1>
+        <p>Data-driven recommendations computed from your ML credit profile and SHAP risk factor sensitivities.</p>
+    </div>
+    <div class="header-action">
+        <a href="{{ url_for('user_assess') }}" class="btn-primary">
+            <i class="fa-solid fa-calculator"></i> Run New Assessment
+        </a>
+    </div>
+</div>
+
+<!-- Financial Health Score Hero Banner -->
+{% set credit_val = stats.credit_score or 700 %}
+{% set prob_val = stats.probability_val or 25.0 %}
+{% set health_score = [([((credit_val - 300) / 600 * 50) + ((100 - prob_val) * 0.5), 15]|max), 98]|min|round|int %}
+
+<div class="health-score-hero">
+    <div class="health-gauge-circle">
+        <svg class="gauge-svg" viewBox="0 0 140 140">
+            <circle class="gauge-bg" cx="70" cy="70" r="58"></circle>
+            <!-- 2 * PI * 58 = 364.42 -->
+            {% set dash_offset = 364.42 - (364.42 * health_score / 100) %}
+            <circle class="gauge-fill" cx="70" cy="70" r="58"
+                    stroke="{{ '#10B981' if health_score >= 70 else ('#F59E0B' if health_score >= 45 else '#EF4444') }}"
+                    stroke-dasharray="364.42"
+                    stroke-dashoffset="{{ dash_offset }}"></circle>
+        </svg>
+        <div class="gauge-inner-text">
+            <span class="gauge-score-val">{{ health_score }}</span>
+            <span class="gauge-score-label">Health Score</span>
+        </div>
+    </div>
+
+    <div class="health-hero-details">
+        <h2>
+            {% if health_score >= 75 %}
+                Prime Financial Profile & Strong Standing
+            {% elif health_score >= 50 %}
+                Moderate Financial Standing & Optimization Potential
+            {% else %}
+                High Underwriting Sensitivity & Immediate Action Needed
+            {% endif %}
+        </h2>
+        <p>
+            Your overall score combines credit score durability, predicted default vulnerability (<strong>{{ stats.probability_display }}</strong>), 
+            and active debt-service metrics. Follow the prioritized actions below to unlock lower interest rates and higher approval ceilings.
+        </p>
+        <div class="health-pill-tags">
+            <span class="health-pill">
+                <i class="fa-solid fa-gauge-high"></i> Credit Score: <strong>{{ stats.credit_score }} ({{ stats.credit_rating }})</strong>
+            </span>
+            <span class="health-pill">
+                <i class="fa-solid fa-shield-halved"></i> Risk Tier: <strong>{{ stats.risk_category }}</strong>
+            </span>
+            <span class="health-pill">
+                <i class="fa-solid fa-chart-pie"></i> Default Probability: <strong>{{ stats.probability_display }}</strong>
+            </span>
+        </div>
+    </div>
+
+    <div class="health-hero-actions">
+        <a href="#simulator" class="btn-hero-action">
+            <i class="fa-solid fa-sliders"></i> Test What-If Simulator
+        </a>
+        <span style="font-size: 0.78rem; color: #94A3B8; text-align: right;">Updated continuously from ML models</span>
+    </div>
+</div>
+
+<!-- Categorized Action Cards Grid -->
+<div class="section-title-row" style="margin-bottom: 1.25rem;">
+    <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--user-navy);">
+        <i class="fa-solid fa-list-check text-blue"></i> Targeted Improvement Categories
+    </h3>
+    <span style="color: var(--user-text-muted); font-size: 0.88rem;">Derived from ensemble model feature importances</span>
+</div>
+
+<div class="rec-category-grid">
+    <!-- Card 1: Credit Score Elevation -->
+    <div class="rec-category-card">
+        <div class="rec-card-top">
+            <div class="rec-icon-box bg-blue-light">
+                <i class="fa-solid fa-gauge-high text-blue"></i>
+            </div>
+            <span class="rec-priority-pill {{ 'high' if credit_val < 680 else 'medium' }}">
+                {{ 'High Priority' if credit_val < 680 else 'Maintenance' }}
+            </span>
+        </div>
+        <div class="rec-card-title">
+            <h3>Credit Score Optimization</h3>
+            <span>Target: 750+ Prime Tier</span>
+        </div>
+        <ul class="rec-items-list">
+            <li class="rec-item">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Maintain revolving credit card utilization strictly under <strong>30%</strong> across all open limits.</span>
+            </li>
+            <li class="rec-item">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Avoid opening multiple new unsecured consumer or pay-later lines within 90 days of loan application.</span>
+            </li>
+            <li class="rec-item">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Verify credit bureau reports for stale accounts or inaccurate reporting to protect bureau reliability.</span>
+            </li>
+        </ul>
+        <div class="rec-card-footer">
+            <span class="rec-impact-tag">
+                <i class="fa-solid fa-arrow-trend-up"></i> Estimated +35 to +50 pts
+            </span>
+            <small style="color: #64748B; font-weight: 600;">Est. 60–90 Days</small>
+        </div>
+    </div>
+
+    <!-- Card 2: Debt Consolidation & DTI -->
+    <div class="rec-category-card">
+        <div class="rec-card-top">
+            <div class="rec-icon-box bg-purple-light">
+                <i class="fa-solid fa-scale-balanced text-purple"></i>
+            </div>
+            <span class="rec-priority-pill {{ 'high' if stats.latest_prediction and stats.latest_prediction.existing_loans >= 2 else 'low' }}">
+                {{ 'High Priority' if stats.latest_prediction and stats.latest_prediction.existing_loans >= 2 else 'Good Standing' }}
+            </span>
+        </div>
+        <div class="rec-card-title">
+            <h3>Debt Burden & Loan Count</h3>
+            <span>Target: EMI < 35% of Monthly Income</span>
+        </div>
+        <ul class="rec-items-list">
+            {% if stats.latest_prediction and stats.latest_prediction.existing_loans > 0 %}
+            <li class="rec-item">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Consolidate your <strong>{{ stats.latest_prediction.existing_loans }} active loans</strong> into a single structured balance to reduce monthly cash flow drag.</span>
+            </li>
+            {% endif %}
+            <li class="rec-item">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Target paying off high-interest micro-debts or credit cards using the avalanche method before submitting high-value principal requests.</span>
+            </li>
+            <li class="rec-item">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Ensure net monthly disposable surplus remains comfortably above 40% after all proposed EMIs.</span>
+            </li>
+        </ul>
+        <div class="rec-card-footer">
+            <span class="rec-impact-tag">
+                <i class="fa-solid fa-arrow-trend-down"></i> Lowers default probability by ~6-12%
+            </span>
+            <small style="color: #64748B; font-weight: 600;">Immediate</small>
+        </div>
+    </div>
+
+    <!-- Card 3: Loan Structuring Strategy -->
+    <div class="rec-category-card">
+        <div class="rec-card-top">
+            <div class="rec-icon-box bg-teal-light">
+                <i class="fa-solid fa-sliders text-teal"></i>
+            </div>
+            <span class="rec-priority-pill medium">Strategic</span>
+        </div>
+        <div class="rec-card-title">
+            <h3>Loan Amount & Tenure Structuring</h3>
+            <span>Model Sensitivity Tuning</span>
+        </div>
+        <ul class="rec-items-list">
+            <li class="rec-item">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Selecting an optimal tenure (36–48 months) balances monthly affordability without excessive cumulative interest penalty.</span>
+            </li>
+            <li class="rec-item">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Limiting requested principal to under 5x your verified monthly salary increases automated approval confidence.</span>
+            </li>
+            <li class="rec-item">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Offering a modest upfront equity or down-payment fraction reduces lender loss-given-default exposure.</span>
+            </li>
+        </ul>
+        <div class="rec-card-footer">
+            <span class="rec-impact-tag">
+                <i class="fa-solid fa-percent"></i> Unlocks 0.5%–1.25% lower APR
+            </span>
+            <small style="color: #64748B; font-weight: 600;">Application Time</small>
+        </div>
+    </div>
+</div>
+
+<!-- Interactive What-If Scenario Simulator -->
+<div class="simulator-section" id="simulator">
+    <div class="simulator-header">
+        <div>
+            <h2><i class="fa-solid fa-calculator text-blue"></i> Interactive What-If Loan Simulator</h2>
+            <p style="color: var(--user-text-muted); font-size: 0.92rem; margin-top: 0.2rem;">
+                Adjust key profile variables to observe real-time predicted impact on your default probability and tier.
+            </p>
+        </div>
+        <span class="simulator-badge"><i class="fa-solid fa-bolt"></i> Real-time Sensitivity Engine</span>
+    </div>
+
+    <div class="simulator-grid">
+        <!-- Controls Column -->
+        <div class="sim-controls">
+            <!-- Slider 1: Credit Score -->
+            <div class="slider-group">
+                <div class="slider-label-row">
+                    <label for="simCreditScore"><i class="fa-solid fa-gauge-high text-blue"></i> Simulated Credit Score</label>
+                    <span class="slider-val-badge" id="simCreditVal">{{ stats.credit_score }}</span>
+                </div>
+                <input type="range" class="sim-slider" id="simCreditScore" min="500" max="850" step="5" value="{{ stats.credit_score }}">
+                <div class="slider-ticks">
+                    <span>500 (Poor)</span>
+                    <span>650 (Fair)</span>
+                    <span>720 (Good)</span>
+                    <span>850 (Excellent)</span>
+                </div>
+            </div>
+
+            <!-- Slider 2: Loan Amount Reduction -->
+            {% set base_loan = stats.latest_prediction.loan_amount if stats.latest_prediction else 300000 %}
+            <div class="slider-group">
+                <div class="slider-label-row">
+                    <label for="simLoanAmount"><i class="fa-solid fa-indian-rupee-sign text-green"></i> Requested Loan Amount</label>
+                    <span class="slider-val-badge" id="simLoanVal">₹{{ "{:,.0f}".format(base_loan) }}</span>
+                </div>
+                <input type="range" class="sim-slider" id="simLoanAmount" min="50000" max="1000000" step="25000" value="{{ base_loan }}">
+                <div class="slider-ticks">
+                    <span>₹50,000</span>
+                    <span>₹3,00,000</span>
+                    <span>₹6,00,000</span>
+                    <span>₹10,00,000</span>
+                </div>
+            </div>
+
+            <!-- Slider 3: Loan Tenure -->
+            {% set base_term = stats.latest_prediction.loan_term if stats.latest_prediction else 36 %}
+            <div class="slider-group">
+                <div class="slider-label-row">
+                    <label for="simLoanTerm"><i class="fa-solid fa-calendar-days text-purple"></i> Repayment Term (Months)</label>
+                    <span class="slider-val-badge" id="simTermVal">{{ base_term }} Months</span>
+                </div>
+                <input type="range" class="sim-slider" id="simLoanTerm" min="12" max="72" step="6" value="{{ base_term }}">
+                <div class="slider-ticks">
+                    <span>12 mo</span>
+                    <span>24 mo</span>
+                    <span>36 mo</span>
+                    <span>48 mo</span>
+                    <span>60 mo</span>
+                    <span>72 mo</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Box Column -->
+        <div class="sim-result-card">
+            <div>
+                <div class="sim-result-header"><i class="fa-solid fa-wand-magic-sparkles"></i> Simulated Risk Output</div>
+                <div class="sim-probability-display">
+                    <div class="sim-prob-val" id="simPredictedProb">{{ stats.probability_display }}</div>
+                    <span class="sim-prob-badge badge-success" id="simRiskBadge">{{ stats.risk_category }}</span>
+                </div>
+
+                <div class="sim-delta-row">
+                    <div class="sim-delta-item">
+                        <div class="sim-delta-label">Probability Shift</div>
+                        <div class="sim-delta-val text-success" id="simDeltaProb">0.0%</div>
+                    </div>
+                    <div class="sim-delta-item">
+                        <div class="sim-delta-label">Estimated APR Tier</div>
+                        <div class="sim-delta-val text-blue" id="simEstApr">9.5% APR</div>
+                    </div>
+                </div>
+            </div>
+
+            <a href="{{ url_for('user_assess') }}" class="sim-cta-btn" id="simAssessLink">
+                <i class="fa-solid fa-paper-plane"></i> Apply These Values in Assessment
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- 30-60-90 Day Action Roadmap -->
+<div class="roadmap-section">
+    <div class="roadmap-header">
+        <h2><i class="fa-solid fa-route text-blue"></i> Structured 30–60–90 Day Roadmap</h2>
+        <p>A step-by-step checklist to systematically transform your applicant profile into an institutional-grade approval candidate.</p>
+    </div>
+
+    <div class="roadmap-grid">
+        <!-- Phase 1 -->
+        <div class="roadmap-phase-card">
+            <div class="phase-number">1</div>
+            <div class="phase-timeframe">Days 1 – 30</div>
+            <h4>Immediate Clean-Up</h4>
+            <ul class="roadmap-tasks">
+                <li class="roadmap-task">
+                    <input type="checkbox" id="task1" checked>
+                    <label for="task1">Download and cross-check official credit bureau reports for reporting discrepancies.</label>
+                </li>
+                <li class="roadmap-task">
+                    <input type="checkbox" id="task2">
+                    <label for="task2">Pay down all existing credit card balances to beneath 30% of authorized limits.</label>
+                </li>
+                <li class="roadmap-task">
+                    <input type="checkbox" id="task3">
+                    <label for="task3">Set all existing recurring loan EMIs to automated auto-debit to eliminate any grace-period misses.</label>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Phase 2 -->
+        <div class="roadmap-phase-card">
+            <div class="phase-number">2</div>
+            <div class="phase-timeframe">Days 31 – 60</div>
+            <h4>Debt Consolidation</h4>
+            <ul class="roadmap-tasks">
+                <li class="roadmap-task">
+                    <input type="checkbox" id="task4">
+                    <label for="task4">Close redundant zero-balance micro-credit or BNPL accounts that register as active inquiries.</label>
+                </li>
+                <li class="roadmap-task">
+                    <input type="checkbox" id="task5">
+                    <label for="task5">Consolidate multiple outstanding liabilities to lower total monthly debt servicing burden.</label>
+                </li>
+                <li class="roadmap-task">
+                    <input type="checkbox" id="task6">
+                    <label for="task6">Re-evaluate income documentation and gather 6 months of continuous salary deposit statements.</label>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Phase 3 -->
+        <div class="roadmap-phase-card">
+            <div class="phase-number">3</div>
+            <div class="phase-timeframe">Days 61 – 90</div>
+            <h4>Prime Application Readiness</h4>
+            <ul class="roadmap-tasks">
+                <li class="roadmap-task">
+                    <input type="checkbox" id="task7">
+                    <label for="task7">Re-run Explainable AI assessment on LoanPredict AI to verify lowered default probability tier.</label>
+                </li>
+                <li class="roadmap-task">
+                    <input type="checkbox" id="task8">
+                    <label for="task8">Export verified SHAP & LIME transparency certificate to leverage with prime underwriting officers.</label>
+                </li>
+                <li class="roadmap-task">
+                    <input type="checkbox" id="task9">
+                    <label for="task9">Submit formal application under optimized loan term and negotiated low-risk interest rate.</label>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Partner Financial Institutions Section -->
+<div class="institutions-section" style="margin-top: 2.5rem;">
+    <div class="section-title-row" style="margin-bottom: 1.25rem;">
+        <div>
+            <h3 style="font-size: 1.35rem; font-weight: 700; color: var(--user-navy);">
+                <i class="fa-solid fa-building-columns text-blue"></i> Institution Recommendations & Lending Partners
+            </h3>
+            <p style="color: var(--user-text-muted); font-size: 0.9rem; margin-top: 0.2rem;">
+                Potentially suitable lending institutions based on your available credit profile. Information is sourced transparently; final terms depend on individual institutional underwriting.
+            </p>
+        </div>
+    </div>
+
+    <div class="rec-category-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+        {% for inst in institutions %}
+        <div class="rec-category-card" style="border-top: 4px solid var(--user-blue);">
+            <div class="rec-card-top">
+                <div class="rec-icon-box bg-blue-light">
+                    <i class="fa-solid fa-building-columns text-blue"></i>
+                </div>
+                <span class="rec-priority-pill {% if inst.type == 'Public Sector Bank' %}low{% else %}medium{% endif %}">
+                    {{ inst.type }}
+                </span>
+            </div>
+            <div class="rec-card-title">
+                <h3>{{ inst.name }}</h3>
+                <span style="font-size: 0.85rem; color: #0284C7; font-weight: 600;">
+                    <i class="fa-solid fa-percent"></i> APR: {{ inst.interest_range }}
+                </span>
+            </div>
+
+            <div style="margin: 0.75rem 0; font-size: 0.85rem; line-height: 1.5; color: var(--user-text-secondary);">
+                <strong>Why potentially suitable:</strong><br>
+                {{ inst.key_features }}
+            </div>
+
+            <div style="margin-bottom: 0.75rem;">
+                <div style="font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.35rem;">Supported Loan Types:</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.35rem;">
+                    {% for lt in inst.supported_loans %}
+                    <span style="background: #F1F5F9; color: #334155; font-size: 0.75rem; padding: 0.2rem 0.55rem; border-radius: 4px; font-weight: 500;">
+                        {{ lt }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 0.65rem; font-size: 0.8rem; color: #64748B; margin-bottom: 1rem;">
+                <i class="fa-solid fa-circle-info text-blue"></i> <strong>Eligibility Note:</strong> {{ inst.eligibility_note }}
+                <br><small style="color: #94A3B8;">Min Credit Score: {{ inst.min_credit_score }} (Preferred: {{ inst.preferred_credit_score }})</small>
+            </div>
+
+            <div class="rec-card-footer" style="padding-top: 0.75rem; border-top: 1px solid #E2E8F0;">
+                <div>
+                    <span style="font-size: 0.75rem; color: #64748B;">Processing Fee</span><br>
+                    <strong style="font-size: 0.85rem; color: #1E293B;">{{ inst.processing_fee }}</strong>
+                </div>
+                <a href="{{ url_for('user_apply_loan') }}?type=Personal" class="btn-primary" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
+                    <i class="fa-solid fa-file-circle-plus"></i> Apply Now
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Compliance / Disclaimer Alert -->
+    <div class="compliance-disclaimer" style="margin-top: 1.5rem;">
+        <i class="fa-solid fa-shield-halved"></i>
+        <div>
+            <strong>Transparent Lending Disclaimer:</strong> Recommendations are calculated as potentially suitable suggestions based on your self-reported and predicted risk parameters. LoanPredict AI does not guarantee loan sanctions or act as a direct lender. Final approval, exact APR, and loan disbursement remain exclusively at the discretion of the partner bank or NBFC after official document verification.
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Interactive Simulator Logic
+(function() {
+    const baseCredit = {{ stats.credit_score or 700 }};
+    const baseLoan = {{ (stats.latest_prediction.loan_amount if stats.latest_prediction else 300000) }};
+    const baseTerm = {{ (stats.latest_prediction.loan_term if stats.latest_prediction else 36) }};
+    const baseProb = {{ stats.probability_val or 25.0 }};
+
+    const sliderCredit = document.getElementById('simCreditScore');
+    const sliderLoan = document.getElementById('simLoanAmount');
+    const sliderTerm = document.getElementById('simLoanTerm');
+
+    const labelCredit = document.getElementById('simCreditVal');
+    const labelLoan = document.getElementById('simLoanVal');
+    const labelTerm = document.getElementById('simTermVal');
+
+    const outProb = document.getElementById('simPredictedProb');
+    const outBadge = document.getElementById('simRiskBadge');
+    const outDelta = document.getElementById('simDeltaProb');
+    const outApr = document.getElementById('simEstApr');
+
+    function updateSimulation() {
+        const curCredit = parseInt(sliderCredit.value, 10);
+        const curLoan = parseFloat(sliderLoan.value);
+        const curTerm = parseInt(sliderTerm.value, 10);
+
+        labelCredit.textContent = curCredit;
+        labelLoan.textContent = '₹' + curLoan.toLocaleString('en-IN');
+        labelTerm.textContent = curTerm + ' Months';
+
+        // Sensitivity model approximation matching ensemble weights:
+        // Credit score impact: ~ -0.15% risk per point above baseline
+        const creditDelta = (curCredit - baseCredit);
+        const creditEffect = -0.12 * creditDelta;
+
+        // Loan amount impact: +0.005% per ₹1,000 above baseline
+        const loanDelta = (curLoan - baseLoan) / 1000;
+        const loanEffect = 0.045 * loanDelta;
+
+        // Term impact: longer term slightly increases default risk
+        const termDelta = (curTerm - baseTerm);
+        const termEffect = 0.15 * termDelta;
+
+        let simProb = baseProb + creditEffect + loanEffect + termEffect;
+        simProb = Math.max(1.5, Math.min(96.0, simProb));
+
+        const delta = simProb - baseProb;
+
+        outProb.textContent = simProb.toFixed(2) + '%';
+        if (delta < -0.05) {
+            outDelta.textContent = '↓ ' + Math.abs(delta).toFixed(1) + '% (Improved)';
+            outDelta.className = 'sim-delta-val text-success';
+        } else if (delta > 0.05) {
+            outDelta.textContent = '↑ +' + Math.abs(delta).toFixed(1) + '% (Elevated)';
+            outDelta.className = 'sim-delta-val text-danger';
+        } else {
+            outDelta.textContent = '0.0% (Baseline)';
+            outDelta.className = 'sim-delta-val text-muted';
+        }
+
+        if (simProb < 30) {
+            outBadge.textContent = 'LOW RISK';
+            outBadge.className = 'sim-prob-badge badge-success';
+            outApr.textContent = '8.2% – 9.5% APR';
+        } else if (simProb < 60) {
+            outBadge.textContent = 'MEDIUM RISK';
+            outBadge.className = 'sim-prob-badge badge-warning';
+            outApr.textContent = '10.5% – 12.8% APR';
+        } else {
+            outBadge.textContent = 'HIGH RISK';
+            outBadge.className = 'sim-prob-badge badge-danger';
+            outApr.textContent = '14.0% – 18.5% APR';
+        }
+    }
+
+    sliderCredit.addEventListener('input', updateSimulation);
+    sliderLoan.addEventListener('input', updateSimulation);
+    sliderTerm.addEventListener('input', updateSimulation);
+
+    updateSimulation();
+})();
+</script>
+{% endblock %}

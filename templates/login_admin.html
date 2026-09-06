@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrator Login - LoanPredict AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+</head>
+<body class="auth-body">
+    <div class="auth-card admin-auth-card">
+        <div class="auth-header">
+            <div class="auth-logo admin-logo">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h2>Administrator Portal</h2>
+            <p>Institutional access for portfolio auditing, risk distribution, and model metrics.</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="auth-alerts">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('login_admin') }}" class="auth-form">
+            <div class="form-group">
+                <label for="email">Admin Email Address</label>
+                <div class="input-wrap">
+                    <i class="fa-regular fa-envelope"></i>
+                    <input type="email" name="email" id="email" value="admin@loanpredict.ai" placeholder="admin@loanpredict.ai" required autofocus>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Security Password</label>
+                <div class="input-wrap">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" name="password" id="password" value="admin123" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <div class="demo-credentials-box">
+                <span><strong>Default Auditor Credentials:</strong></span>
+                <code>admin@loanpredict.ai / admin123</code>
+            </div>
+
+            <button type="submit" class="btn-portal btn-admin" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                <i class="fa-solid fa-shield-check"></i> Login as Administrator
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <a href="{{ url_for('landing') }}" class="back-link">
+                <i class="fa-solid fa-arrow-left"></i> Back to Home
+            </a>
+            <span class="divider-dot">&bull;</span>
+            <a href="{{ url_for('login_user') }}" class="admin-link">
+                Borrower Login <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

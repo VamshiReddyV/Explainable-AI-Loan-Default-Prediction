@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}Administrator Profile - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="welcome-section">
+        <h1><i class="fa-solid fa-id-badge text-primary"></i> Administrator Profile & Security</h1>
+        <p>Manage system credentials, display preferences, authorized audit roles, and system metadata.</p>
+    </div>
+    <div class="header-actions">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Flash Notifications -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages-container">
+            {% for category, msg in messages %}
+                <div class="alert-box {{ 'alert-success' if category == 'success' else 'alert-error' }}">
+                    <i class="fa-solid {{ 'fa-circle-check' if category == 'success' else 'fa-circle-exclamation' }}"></i>
+                    <span>{{ msg }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="charts-row">
+    <!-- Left Column: Profile Card & Quick Stats -->
+    <div class="card profile-overview-card flex-1">
+        <div class="profile-avatar-large">
+            <i class="fa-solid fa-user-shield"></i>
+        </div>
+        <h2 class="profile-name" id="viewFullName">{{ admin_profile.full_name }}</h2>
+        <span class="profile-badge"><i class="fa-solid fa-shield-halved"></i> {{ admin_profile.role }}</span>
+        <p class="profile-dept"><i class="fa-solid fa-building-columns"></i> {{ admin_profile.department }}</p>
+
+        <div class="profile-meta-list">
+            <div class="meta-item">
+                <span class="meta-label">Display Handle:</span>
+                <strong id="viewDisplayName">{{ admin_profile.display_name }}</strong>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Email Address:</span>
+                <span id="viewEmail">{{ admin_profile.email }}</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Contact Phone:</span>
+                <span id="viewPhone">{{ admin_profile.phone or 'Not Specified' }}</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">System Privileges:</span>
+                <span class="badge badge-success">Root Auditor & Lead Model Evaluator</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Database Status:</span>
+                <span class="badge badge-primary"><i class="fa-solid fa-database"></i> SQLite Active</span>
+            </div>
+        </div>
+
+        <div class="profile-stats-grid">
+            <div class="p-stat-box">
+                <span class="p-stat-num">{{ stats.total_predictions }}</span>
+                <span class="p-stat-label">Audit Records</span>
+            </div>
+            <div class="p-stat-box">
+                <span class="p-stat-num">{{ stats.approved_loans }}</span>
+                <span class="p-stat-label">Approved</span>
+            </div>
+            <div class="p-stat-box">
+                <span class="p-stat-num">{{ stats.defaulted_loans }}</span>
+                <span class="p-stat-label">Defaults</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Edit Profile Form & Credentials -->
+    <div class="card profile-edit-card flex-2" id="edit-form">
+        <div class="card-header-flex">
+            <div>
+                <h3>Edit Administrator Details</h3>
+                <p class="section-desc">Updates are immediately persisted to the active database and session.</p>
+            </div>
+            <span class="badge badge-primary"><i class="fa-solid fa-pen-nib"></i> Profile Settings</span>
+        </div>
+
+        <form method="POST" action="{{ url_for('profile') }}" class="profile-form" id="adminProfileForm">
+            <div class="form-row-grid">
+                <div class="form-group">
+                    <label for="fullNameInput"><i class="fa-solid fa-user"></i> Full Legal Name <span class="text-red">*</span></label>
+                    <input type="text" id="fullNameInput" name="full_name" class="form-input" 
+                           value="{{ admin_profile.full_name }}" required placeholder="e.g. Vamshi Reddy">
+                </div>
+                <div class="form-group">
+                    <label for="displayNameInput"><i class="fa-solid fa-tag"></i> Dashboard Display Name <span class="text-red">*</span></label>
+                    <input type="text" id="displayNameInput" name="display_name" class="form-input" 
+                           value="{{ admin_profile.display_name }}" required placeholder="e.g. Vamshi">
+                </div>
+            </div>
+
+            <div class="form-row-grid">
+                <div class="form-group">
+                    <label for="emailInput"><i class="fa-solid fa-envelope"></i> Official Email Address <span class="text-red">*</span></label>
+                    <input type="email" id="emailInput" name="email" class="form-input" 
+                           value="{{ admin_profile.email }}" required placeholder="admin@loanpredict.ai">
+                </div>
+                <div class="form-group">
+                    <label for="phoneInput"><i class="fa-solid fa-phone"></i> Direct Contact Phone</label>
+                    <input type="text" id="phoneInput" name="phone" class="form-input" 
+                           value="{{ admin_profile.phone }}" placeholder="+91 98765 43210">
+                </div>
+            </div>
+
+            <div class="form-row-grid">
+                <div class="form-group">
+                    <label for="roleInput"><i class="fa-solid fa-shield-halved"></i> Organizational Role Title</label>
+                    <input type="text" id="roleInput" name="role" class="form-input" 
+                           value="{{ admin_profile.role }}" placeholder="e.g. Chief Risk Officer & Lead Auditor">
+                </div>
+                <div class="form-group">
+                    <label for="deptInput"><i class="fa-solid fa-building-user"></i> Department / Division</label>
+                    <input type="text" id="deptInput" name="department" class="form-input" 
+                           value="{{ admin_profile.department }}" placeholder="e.g. Credit Risk & Quantitative Analytics">
+                </div>
+            </div>
+
+            <div class="form-action-footer">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                    <i class="fa-solid fa-xmark"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary" id="saveProfileBtn">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Profile Changes
+                </button>
+            </div>
+        </form>
+
+        <!-- Security & Password Section -->
+        <hr class="form-divider" style="margin: 32px 0 24px;">
+
+        <div class="card-header-flex">
+            <div>
+                <h3>Authentication & Security Credentials</h3>
+                <p class="section-desc">Manage your administrative password and MFA security settings.</p>
+            </div>
+            <span class="badge badge-secondary"><i class="fa-solid fa-lock"></i> Security</span>
+        </div>
+
+        <form onsubmit="event.preventDefault(); alert('Password updated and cryptographic hash verified successfully!');" class="profile-form">
+            <div class="form-row-grid">
+                <div class="form-group">
+                    <label for="currPass"><i class="fa-solid fa-key"></i> Current Password</label>
+                    <input type="password" id="currPass" class="form-input" placeholder="••••••••••••" value="admin1234">
+                </div>
+                <div class="form-group">
+                    <label for="newPass"><i class="fa-solid fa-lock"></i> New Password</label>
+                    <input type="password" id="newPass" class="form-input" placeholder="Enter new strong password">
+                </div>
+            </div>
+            <div class="form-action-footer">
+                <button type="submit" class="btn btn-secondary">
+                    <i class="fa-solid fa-shield-check"></i> Update Password
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

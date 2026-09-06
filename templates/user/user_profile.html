@@ -1,0 +1,71 @@
+{% extends 'user/user_base.html' %}
+{% block title %}My Profile - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="user-page-header">
+    <div class="header-info">
+        <h1><i class="fa-regular fa-user"></i> My Account Profile</h1>
+        <p>Manage your account identity, contact details, and security credentials.</p>
+    </div>
+</div>
+
+<div class="profile-layout-grid">
+    <!-- Profile Card (Left) -->
+    <div class="user-form-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-id-card"></i> Personal Information</h3>
+        </div>
+        <form method="POST" action="{{ url_for('user_profile') }}" class="loan-assess-form" style="padding-top: 1rem;">
+            <input type="hidden" name="action" value="profile">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" name="name" id="name" value="{{ user.name if user else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" value="{{ user.email if user else '' }}" disabled style="background-color: #F8FAFC; cursor: not-allowed;">
+                <small class="text-muted">Email address is tied to your login identity.</small>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" name="phone" id="phone" value="{{ user.phone if user and user.phone else '' }}" placeholder="+91 98765 43210">
+            </div>
+            <div class="form-group">
+                <label>Account Role</label>
+                <input type="text" value="Verified Borrower (User)" disabled style="background-color: #F8FAFC;">
+            </div>
+
+            <div class="form-actions" style="margin-top: 1.5rem;">
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                </button>
+                <a href="{{ url_for('user_dashboard') }}" class="btn-cancel">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Security Card (Right) -->
+    <div class="user-form-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-lock"></i> Change Password</h3>
+        </div>
+        <form method="POST" action="{{ url_for('user_profile') }}" class="loan-assess-form" style="padding-top: 1rem;">
+            <input type="hidden" name="action" value="password">
+            <div class="form-group">
+                <label for="current_password">Current Password</label>
+                <input type="password" name="current_password" id="current_password" required placeholder="Enter existing password">
+            </div>
+            <div class="form-group">
+                <label for="new_password">New Password</label>
+                <input type="password" name="new_password" id="new_password" required minlength="6" placeholder="At least 6 characters">
+            </div>
+
+            <div class="form-actions" style="margin-top: 1.5rem;">
+                <button type="submit" class="btn-outline">
+                    <i class="fa-solid fa-key"></i> Update Password
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

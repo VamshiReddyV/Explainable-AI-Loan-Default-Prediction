@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}LIME Explanation - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="welcome-section">
+        <h1><i class="fa-solid fa-crosshairs text-purple"></i> LIME Local Surrogate Explanation</h1>
+        <p>Local Interpretable Model-agnostic Explanations using linear surrogate decision boundaries.</p>
+    </div>
+    <div class="header-actions">
+        <!-- Applicant Selector Dropdown -->
+        <form method="GET" action="{{ url_for('lime_explanation') }}" class="applicant-select-form">
+            <label for="applicantSelect" class="form-label-inline"><i class="fa-solid fa-user-check"></i> Select Applicant:</label>
+            <select name="id" id="applicantSelect" class="custom-select" onchange="this.form.submit()">
+                {% for p in all_predictions %}
+                <option value="{{ p.id }}" {% if prediction and p.id == prediction.id %}selected{% endif %}>
+                    #{{ p.id }} - {{ p.applicant_name }} ({{ p.prediction }})
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+
+{% if prediction %}
+<!-- Applicant Overview Banner -->
+<div class="card applicant-hero-card">
+    <div class="hero-left">
+        <div class="avatar-circle avatar-purple">
+            <i class="fa-solid fa-user"></i>
+        </div>
+        <div>
+            <h2>{{ prediction.applicant_name }} <span class="badge-sub">Application #{{ prediction.id }}</span></h2>
+            <div class="applicant-meta-chips">
+                <span><i class="fa-solid fa-briefcase"></i> {{ prediction.employment_type }}</span>
+                <span><i class="fa-solid fa-wallet"></i> ₹{{ "{:,.0f}".format(prediction.monthly_income) }}/mo</span>
+                <span><i class="fa-solid fa-gauge"></i> Credit: <strong>{{ prediction.credit_score }}</strong></span>
+                <span><i class="fa-solid fa-hand-holding-dollar"></i> Loan: <strong>₹{{ "{:,.0f}".format(prediction.loan_amount) }}</strong> ({{ prediction.loan_term }} mo)</span>
+            </div>
+        </div>
+    </div>
+    <div class="hero-right">
+        <div class="score-pill-large {{ 'bg-red-subtle' if prediction.prediction == 'Default' else 'bg-green-subtle' }}">
+            <div class="pill-label">Model Prediction</div>
+            <div class="pill-val {{ 'text-red' if prediction.prediction == 'Default' else 'text-green' }}">
+                {{ prediction.prediction|upper }}
+            </div>
+            <div class="pill-sub">P(Default) = <strong>{{ "%.2f"|format(prediction.default_probability * 100) }}%</strong></div>
+        </div>
+    </div>
+</div>
+
+<!-- LIME Methodology Notice Card -->
+<div class="card baseline-callout purple-callout">
+    <div class="callout-icon"><i class="fa-solid fa-crosshairs"></i></div>
+    <div class="callout-content">
+        <h4>Target Explanation: <span class="text-purple">P(Default Risk)</span> via Local Sparse Linear Surrogate</h4>
+        <p>
+            LIME generated 5,000 synthetic perturbations around this applicant's profile, weighted them by exponential similarity distance, 
+            and trained an interpretable linear model to approximate the Random Forest boundary locally.
+            Rule conditions with <strong>positive weights</strong> pushed the decision toward Default. Rule conditions with <strong>negative weights</strong> protected the applicant.
+        </p>
+    </div>
+</div>
+
+<!-- LIME Visual Rule Weights Chart -->
+<div class="card chart-card" style="margin-top: 20px;">
+    <div class="card-header-flex">
+        <div>
+            <h3>Local Decision Rule Weights</h3>
+            <p class="section-desc">Linear surrogate weights (&omega;) for conditions explaining default risk in natural applicant units.</p>
+        </div>
+        <div class="chart-legend-pill">
+            <span class="dot red"></span> Pushes toward Default &nbsp;|&nbsp;
+            <span class="dot green"></span> Pushes toward Non-Default
+        </div>
+    </div>
+    <div class="chart-container" style="height: 380px;">
+        <canvas id="limeWeightsChart"></canvas>
+    </div>
+</div>
+
+<!-- Detailed LIME Rule Breakdown Table -->
+<div class="card recent-predictions-card" style="margin-top: 24px;">
+    <div class="card-header-flex">
+        <h3>LIME Condition & Threshold Analysis</h3>
+        <span class="text-muted">Local Surrogate Fidelity (&Omega;)</span>
+    </div>
+    <div class="table-responsive">
+        <table class="predictions-table">
+            <thead>
+                <tr>
+                    <th>Evaluated Condition Rule</th>
+                    <th>Associated Feature</th>
+                    <th>Surrogate Weight (&omega;)</th>
+                    <th>Risk Direction</th>
+                    <th>Plain-English Interpretation</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in lime_rules %}
+                <tr>
+                    <td><code>{{ r.condition }}</code></td>
+                    <td><strong>{{ r.feature }}</strong></td>
+                    <td>
+                        <strong class="{{ 'text-red' if r.weight > 0 else 'text-green' }}">
+                            {{ '+' if r.weight > 0 else '' }}{{ r.weight }}
+                        </strong>
+                    </td>
+                    <td>
+                        {% if r.direction == 'increases' %}
+                            <span class="badge badge-default"><i class="fa-solid fa-arrow-trend-up"></i> Increases Risk</span>
+                        {% else %}
+                            <span class="badge badge-success"><i class="fa-solid fa-arrow-trend-down"></i> Decreases Risk</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="interpretation-text">{{ r.interpretation }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Theoretical Foundations -->
+<div class="xai-theory-grid" style="margin-top: 24px;">
+    <div class="card theory-card">
+        <h4><i class="fa-solid fa-microscope"></i> Local Surrogate Philosophy</h4>
+        <p>
+            While the global model (200 decision trees) is non-linear and complex, any complex decision boundary can be locally approximated by a simple linear model: 
+            <code>g(z') = w<sub>0</sub> + &sum; w<sub>i</sub> z'<sub>i</sub></code>.
+        </p>
+    </div>
+    <div class="card theory-card">
+        <h4><i class="fa-solid fa-filter"></i> Rule-Based Discretization</h4>
+        <p>
+            Continuous numerical inputs (such as credit score and income) are discretized into quartile buckets so lending officers receive actionable thresholds (e.g. <code>Credit Score &le; 600</code>).
+        </p>
+    </div>
+</div>
+
+<script>
+    window.limeChartData = {
+        labels: {{ lime_rules | map(attribute='condition') | list | tojson }},
+        weights: {{ lime_rules | map(attribute='weight') | list | tojson }}
+    };
+</script>
+
+{% else %}
+<div class="card empty-state-card">
+    <i class="fa-solid fa-folder-open"></i>
+    <h3>No Applicant Selected</h3>
+    <p>Please select an applicant from the directory to inspect their LIME explanation rules.</p>
+</div>
+{% endif %}
+{% endblock %}

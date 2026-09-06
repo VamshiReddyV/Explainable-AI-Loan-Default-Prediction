@@ -1,0 +1,142 @@
+{% extends 'user/user_base.html' %}
+{% block title %}SHAP Explanation - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="user-page-header">
+    <div class="header-info">
+        <h1><i class="fa-solid fa-asterisk"></i> SHAP (Shapley Additive Explanations)</h1>
+        <p>Game-theoretic attribution of each loan attribute to the model's predicted probability of default.</p>
+    </div>
+    <div class="header-action">
+        <form method="GET" action="{{ url_for('user_shap_page') }}" class="applicant-select-form">
+            <label for="appSelect">Select Assessment:</label>
+            <select name="id" id="appSelect" onchange="this.form.submit()">
+                {% for p in all_predictions %}
+                <option value="{{ p.id }}" {% if prediction and prediction.id == p.id %}selected{% endif %}>
+                    #{{ p.id }} - {{ p.formatted_date }} (₹{{ '{:,.0f}'.format(p.loan_amount or 0) }}) - {{ p.prediction }}
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+
+{% if prediction %}
+<!-- SHAP Summary Banner -->
+<div class="shap-summary-card">
+    <div class="shap-summary-info">
+        <div class="summary-badge">
+            <span class="status-pill {{ 'pill-danger' if prediction.prediction == 'Default' else 'pill-success' }}">
+                {{ prediction.prediction }}
+            </span>
+            <span class="prob-tag">P(Default) = {{ '%.2f'|format((prediction.default_probability or 0) * 100) }}%</span>
+        </div>
+        <h2>Assessment #{{ prediction.id }} Attribution Analysis</h2>
+        <p>Baseline (Expected Value): <strong>{{ '%.1f'|format((shap_data.base_value or 0.35) * 100) }}%</strong>. The features below drive the model prediction higher (red) or lower (green).</p>
+    </div>
+</div>
+
+<!-- SHAP Features Table & Waterfall Visualization -->
+<div class="shap-breakdown-grid">
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3><i class="fa-solid fa-chart-bar"></i> Feature Contributions to P(Default)</h3>
+        </div>
+        <div class="chart-body">
+            <canvas id="shapBarChart" height="320"></canvas>
+        </div>
+    </div>
+
+    <div class="recent-predictions-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-table-list"></i> Feature Attribution Details</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Applicant Value</th>
+                        <th>SHAP Value</th>
+                        <th>Impact Direction</th>
+                        <th>Explanation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in shap_data.features %}
+                    <tr>
+                        <td><strong>{{ f.feature_name }}</strong></td>
+                        <td>{{ f.applicant_value }}</td>
+                        <td>
+                            <strong class="{{ 'text-danger' if f.shap_value > 0 else 'text-success' }}">
+                                {{ '+' if f.shap_value > 0 else '' }}{{ '%.4f'|format(f.shap_value) }}
+                            </strong>
+                        </td>
+                        <td>
+                            <span class="status-pill {{ 'pill-danger' if f.direction == 'Increases Default Risk' else 'pill-success' }}">
+                                {{ f.direction }}
+                            </span>
+                        </td>
+                        <td class="text-muted" style="font-size: 0.85rem;">{{ f.explanation }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="empty-state-card">
+    <i class="fa-solid fa-folder-open empty-icon"></i>
+    <h3>No predictions available to explain</h3>
+    <p>Submit your first loan application to view transparent SHAP explanations.</p>
+    <a href="{{ url_for('user_assess') }}" class="btn-primary" style="margin-top: 1rem; display: inline-block;">Assess My Loan</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if prediction and shap_data.features %}
+<script>
+const features = {{ shap_data.features | tojson }};
+const labels = features.map(f => f.feature_name);
+const values = features.map(f => f.shap_value);
+const colors = values.map(v => v > 0 ? '#EF4444' : '#10B981');
+
+if (document.getElementById('shapBarChart')) {
+    new Chart(document.getElementById('shapBarChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'SHAP Value',
+                data: values,
+                backgroundColor: colors,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => `SHAP: ${ctx.raw > 0 ? '+' : ''}${ctx.raw.toFixed(4)}`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: '#F1F5F9' },
+                    title: { display: true, text: 'Contribution to Default Probability' }
+                },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+}
+</script>
+{% endif %}
+{% endblock %}

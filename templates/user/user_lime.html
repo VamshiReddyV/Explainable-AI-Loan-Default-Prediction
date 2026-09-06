@@ -1,0 +1,127 @@
+{% extends 'user/user_base.html' %}
+{% block title %}LIME Explanation - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="user-page-header">
+    <div class="header-info">
+        <h1><i class="fa-solid fa-crosshairs"></i> LIME (Local Interpretable Model-agnostic Explanations)</h1>
+        <p>Sparse local surrogate rules explaining how changes around your applicant profile shift the decision boundary.</p>
+    </div>
+    <div class="header-action">
+        <form method="GET" action="{{ url_for('user_lime_page') }}" class="applicant-select-form">
+            <label for="limeSelect">Select Assessment:</label>
+            <select name="id" id="limeSelect" onchange="this.form.submit()">
+                {% for p in all_predictions %}
+                <option value="{{ p.id }}" {% if prediction and prediction.id == p.id %}selected{% endif %}>
+                    #{{ p.id }} - {{ p.formatted_date }} (₹{{ '{:,.0f}'.format(p.loan_amount or 0) }}) - {{ p.prediction }}
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+
+{% if prediction %}
+<div class="shap-summary-card">
+    <div class="shap-summary-info">
+        <div class="summary-badge">
+            <span class="status-pill {{ 'pill-danger' if prediction.prediction == 'Default' else 'pill-success' }}">
+                {{ prediction.prediction }}
+            </span>
+            <span class="prob-tag">P(Default) = {{ '%.2f'|format((prediction.default_probability or 0) * 100) }}%</span>
+        </div>
+        <h2>Local Surrogate Weights for Assessment #{{ prediction.id }}</h2>
+        <p>LIME builds a local linear model around this applicant. Positive weights increase risk; negative weights support approval.</p>
+    </div>
+</div>
+
+<div class="shap-breakdown-grid">
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3><i class="fa-solid fa-chart-bar"></i> LIME Local Surrogate Weights</h3>
+        </div>
+        <div class="chart-body">
+            <canvas id="limeBarChart" height="320"></canvas>
+        </div>
+    </div>
+
+    <div class="recent-predictions-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-table-list"></i> Decision Rule Conditions</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Rule / Feature</th>
+                        <th>Applicant Value</th>
+                        <th>Weight</th>
+                        <th>Local Impact</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in lime_data %}
+                    <tr>
+                        <td><strong>{{ item.feature_name or item.rule or item.feature }}</strong></td>
+                        <td>{{ item.applicant_value if item.applicant_value is defined else '—' }}</td>
+                        <td>
+                            <strong class="{{ 'text-danger' if (item.weight or 0) > 0 else 'text-success' }}">
+                                {{ '+' if (item.weight or 0) > 0 else '' }}{{ '%.4f'|format(item.weight or 0) }}
+                            </strong>
+                        </td>
+                        <td>
+                            <span class="status-pill {{ 'pill-danger' if (item.weight or 0) > 0 else 'pill-success' }}">
+                                {{ 'Increases Default Risk' if (item.weight or 0) > 0 else 'Supports Approval' }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="empty-state-card">
+    <i class="fa-solid fa-folder-open empty-icon"></i>
+    <h3>No assessments available to explain</h3>
+    <a href="{{ url_for('user_assess') }}" class="btn-primary" style="margin-top: 1rem; display: inline-block;">Assess My Loan</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if prediction and lime_data %}
+<script>
+const limeItems = {{ lime_data | tojson }};
+const limeLabels = limeItems.map(i => i.feature_name || i.rule || i.feature);
+const limeWeights = limeItems.map(i => i.weight || 0);
+const limeColors = limeWeights.map(w => w > 0 ? '#EF4444' : '#10B981');
+
+if (document.getElementById('limeBarChart')) {
+    new Chart(document.getElementById('limeBarChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: limeLabels,
+            datasets: [{
+                label: 'LIME Weight',
+                data: limeWeights,
+                backgroundColor: limeColors,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: '#F1F5F9' }, title: { display: true, text: 'Surrogate Model Weight' } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+}
+</script>
+{% endif %}
+{% endblock %}

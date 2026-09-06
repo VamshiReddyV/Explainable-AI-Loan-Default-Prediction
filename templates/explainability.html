@@ -1,174 +1,257 @@
 {% extends 'base.html' %}
 
-{% block title %}Explainability Studio - LoanPredict AI{% endblock %}
+{% block title %}SHAP vs LIME Comparison Studio - LoanPredict AI{% endblock %}
 
 {% block content %}
 <div class="dashboard-header">
     <div class="welcome-section">
-        <h1><i class="fa-solid fa-asterisk"></i> Explainability Studio (SHAP & LIME)</h1>
-        <p>Interpret complex machine learning predictions through global and local feature attribution methods.</p>
+        <h1><i class="fa-solid fa-code-compare text-primary"></i> SHAP vs LIME Multi-Method Comparison Studio</h1>
+        <p>Comprehensive algorithmic consensus and divergence audit across game theory and local surrogate models for the same applicant.</p>
     </div>
     <div class="header-actions">
-        <a href="{{ url_for('new_prediction') }}" class="btn btn-primary">
-            <i class="fa-solid fa-circle-plus"></i> Assess New Loan
+        <!-- Applicant Selector Dropdown -->
+        <form method="GET" action="{{ url_for('explainability') }}" class="applicant-select-form">
+            <label for="applicantSelect" class="form-label-inline"><i class="fa-solid fa-user-check"></i> Select Applicant:</label>
+            <select name="id" id="applicantSelect" class="custom-select" onchange="this.form.submit()">
+                {% for p in all_predictions %}
+                <option value="{{ p.id }}" {% if prediction and p.id == prediction.id %}selected{% endif %}>
+                    #{{ p.id }} - {{ p.applicant_name }} ({{ p.prediction }})
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+
+<!-- Three Explainability Options Navigation Bar -->
+<div class="card xai-nav-pills-card">
+    <div class="xai-nav-pills">
+        <a href="{{ url_for('shap_explanation', id=prediction.id if prediction else None) }}" class="xai-pill">
+            <i class="fa-solid fa-asterisk text-blue"></i> 1. SHAP Explanation
+        </a>
+        <a href="{{ url_for('lime_explanation', id=prediction.id if prediction else None) }}" class="xai-pill">
+            <i class="fa-solid fa-crosshairs text-purple"></i> 2. LIME Explanation
+        </a>
+        <a href="{{ url_for('explainability', id=prediction.id if prediction else None) }}" class="xai-pill active">
+            <i class="fa-solid fa-code-compare text-primary"></i> 3. SHAP vs LIME Comparison
         </a>
     </div>
 </div>
 
-<!-- Comparison Banner -->
-<div class="xai-method-grid">
-    <div class="card xai-method-card">
-        <div class="xai-header">
-            <div class="icon-box blue"><i class="fa-solid fa-chart-simple"></i></div>
-            <div>
-                <h3>SHAP (SHapley Additive exPlanations)</h3>
-                <span class="subtext">Game-Theoretic Feature Attribution</span>
+{% if prediction %}
+<!-- Applicant Overview Banner -->
+<div class="card applicant-hero-card">
+    <div class="hero-left">
+        <div class="avatar-circle">
+            <i class="fa-solid fa-user-check"></i>
+        </div>
+        <div>
+            <h2>{{ prediction.applicant_name }} <span class="badge-sub">Application #{{ prediction.id }}</span></h2>
+            <div class="applicant-meta-chips">
+                <span><i class="fa-solid fa-briefcase"></i> {{ prediction.employment_type }}</span>
+                <span><i class="fa-solid fa-wallet"></i> ₹{{ "{:,.0f}".format(prediction.monthly_income) }}/mo</span>
+                <span><i class="fa-solid fa-gauge"></i> Credit Score: <strong>{{ prediction.credit_score }}</strong></span>
+                <span><i class="fa-solid fa-hand-holding-dollar"></i> Requested: <strong>₹{{ "{:,.0f}".format(prediction.loan_amount) }}</strong></span>
             </div>
         </div>
-        <p class="xai-desc">
-            Computes Shapley values from cooperative game theory to fairly allocate the impact of each feature on the model's default score relative to the baseline expectation.
-        </p>
-        <ul class="xai-features">
-            <li><i class="fa-solid fa-check text-green"></i> <strong>Mathematically Consistent:</strong> Satisfies efficiency, symmetry, and monotonicity.</li>
-            <li><i class="fa-solid fa-check text-green"></i> <strong>Global & Local:</strong> Explains both global feature ranking and individual decisions.</li>
-        </ul>
     </div>
-
-    <div class="card xai-method-card">
-        <div class="xai-header">
-            <div class="icon-box purple"><i class="fa-solid fa-crosshairs"></i></div>
-            <div>
-                <h3>LIME (Local Interpretable Model-agnostic Explanations)</h3>
-                <span class="subtext">Local Surrogate Rules</span>
+    <div class="hero-right">
+        <div class="score-pill-large {{ 'bg-red-subtle' if prediction.prediction == 'Default' else 'bg-green-subtle' }}">
+            <div class="pill-label">Inference Outcome</div>
+            <div class="pill-val {{ 'text-red' if prediction.prediction == 'Default' else 'text-green' }}">
+                {{ prediction.prediction|upper }}
             </div>
+            <div class="pill-sub">Default Probability: <strong>{{ "%.2f"|format(prediction.default_probability * 100) }}%</strong></div>
         </div>
-        <p class="xai-desc">
-            Perturbs inputs locally around the applicant's profile and trains an interpretable linear surrogate model to reveal human-understandable threshold conditions.
-        </p>
-        <ul class="xai-features">
-            <li><i class="fa-solid fa-check text-green"></i> <strong>Intuitive Rules:</strong> Explains decisions as conditions (e.g. <code>Credit Score &le; 600</code>).</li>
-            <li><i class="fa-solid fa-check text-green"></i> <strong>Model Agnostic:</strong> Works uniformly across tree ensembles and deep networks.</li>
-        </ul>
     </div>
 </div>
 
-<!-- Global Feature Importance Chart -->
-<div class="card chart-card" style="margin-top: 24px;">
-    <div class="card-header-flex">
-        <div>
-            <h3>Global Model Feature Importance (SHAP Mean |Value|)</h3>
-            <p class="section-desc">Overall ranking of features impacting loan default across 5,000 historical applications.</p>
+<!-- Comparison Summary Cards Row -->
+<div class="summary-cards" style="margin-top: 20px;">
+    <div class="card stat-card">
+        <div class="icon-box blue"><i class="fa-solid fa-handshake-angle"></i></div>
+        <div class="stat-info">
+            <span class="label">Directional Consensus</span>
+            <span class="value">{{ comparison.agreement_rate }}%</span>
+            <span class="trend up"><i class="fa-solid fa-check"></i> Method Agreement</span>
         </div>
-        <span class="badge badge-success">Trained on Random Forest (200 Trees)</span>
     </div>
-    <div class="chart-container" style="height: 320px;">
-        <canvas id="globalShapChart"></canvas>
+
+    <div class="card stat-card">
+        <div class="icon-box red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="stat-info">
+            <span class="label">Key Risk Drivers</span>
+            <span class="value">{{ comparison.key_risk_drivers|length }}</span>
+            <span class="trend down"><i class="fa-solid fa-arrow-up"></i> Escalating Risk</span>
+        </div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="icon-box green"><i class="fa-solid fa-shield-check"></i></div>
+        <div class="stat-info">
+            <span class="label">Protective Factors</span>
+            <span class="value">{{ comparison.protective_factors|length }}</span>
+            <span class="trend up"><i class="fa-solid fa-shield-heart"></i> Mitigating Risk</span>
+        </div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="icon-box orange"><i class="fa-solid fa-code-fork"></i></div>
+        <div class="stat-info">
+            <span class="label">Divergent Factors</span>
+            <span class="value">{{ comparison.divergent_factors|length }}</span>
+            <span class="trend neutral"><i class="fa-solid fa-circle-question"></i> Method Specific</span>
+        </div>
     </div>
 </div>
 
-<!-- Local Explanation Case Study -->
-{% if latest_prediction %}
-<div class="card" style="margin-top: 24px;">
+<!-- Methodological Note Box -->
+<div class="card baseline-callout" style="margin-top: 20px;">
+    <div class="callout-icon"><i class="fa-solid fa-circle-info"></i></div>
+    <div class="callout-content">
+        <h4>Methodological Notice: Comparing SHAP and LIME</h4>
+        <p>
+            SHAP and LIME employ fundamentally different mathematical methodologies. 
+            <strong>SHAP</strong> calculates Shapley values using cooperative game theory to measure global marginal attribution relative to the base value.
+            <strong>LIME</strong> builds a local sparse linear surrogate model around the applicant's perturbed neighborhood. 
+            Because their mathematical frameworks differ, their numeric values are <em>not directly equivalent</em>. 
+            This comparison focuses on <strong>directional agreement</strong> (whether both algorithms identify a feature as escalating or mitigating default risk).
+        </p>
+    </div>
+</div>
+
+<!-- Side-by-Side Comparison Table -->
+<div class="card recent-predictions-card" style="margin-top: 20px;">
     <div class="card-header-flex">
         <div>
-            <h3>Case Study: {{ latest_prediction.applicant_name }}</h3>
-            <p class="section-desc">Comparing SHAP and LIME side-by-side for the latest decision.</p>
+            <h3>Algorithmic Feature Comparison Matrix</h3>
+            <p class="section-desc">Evaluated concurrently on Application #{{ prediction.id }} ({{ prediction.applicant_name }}).</p>
         </div>
-        <div class="prediction-pill-group">
-            <span class="badge {{ 'badge-default' if latest_prediction.prediction == 'Default' else 'badge-success' }}">
-                {{ latest_prediction.prediction }}
-            </span>
-            <span class="bold" style="margin-left: 8px;">{{ "%.2f"|format(latest_prediction.default_probability * 100) }}% Probability</span>
+        <span class="badge badge-primary"><i class="fa-solid fa-code-compare"></i> Dual XAI Audit</span>
+    </div>
+    <div class="table-responsive">
+        <table class="predictions-table comparison-table">
+            <thead>
+                <tr>
+                    <th>Feature Name</th>
+                    <th>Applicant Value</th>
+                    <th>SHAP Attribution (&Phi;)</th>
+                    <th>LIME Condition & Weight (&omega;)</th>
+                    <th>Method Agreement</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in comparison.table %}
+                <tr>
+                    <td><strong>{{ row.feature }}</strong></td>
+                    <td><code>{{ row.applicant_value }}</code></td>
+                    <td>
+                        <span class="xai-val-chip {{ 'chip-red' if row.shap_dir == 'increases' else ('chip-green' if row.shap_dir == 'decreases' else 'chip-neutral') }}">
+                            {{ row.shap_val }}
+                            <small>({{ row.shap_dir }})</small>
+                        </span>
+                    </td>
+                    <td>
+                        {% if row.lime_weight != 'Not in Top LIME Rules' %}
+                            <span class="xai-val-chip {{ 'chip-red' if row.lime_dir == 'increases' else ('chip-green' if row.lime_dir == 'decreases' else 'chip-neutral') }}">
+                                {{ row.lime_weight }}
+                                <small>({{ row.lime_dir }})</small>
+                            </span>
+                            <div class="lime-sub-cond"><code>{{ row.lime_cond }}</code></div>
+                        {% else %}
+                            <span class="text-muted">{{ row.lime_weight }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge {{ row.agreement_badge }}">
+                            {% if row.agreement == 'Agreed' %}
+                                <i class="fa-solid fa-check-double"></i> Agreed
+                            {% elif row.agreement == 'Disagreed' %}
+                                <i class="fa-solid fa-triangle-exclamation"></i> Disagreed
+                            {% else %}
+                                <i class="fa-solid fa-asterisk"></i> {{ row.agreement }}
+                            {% endif %}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Synthesis & Strategic Risk Recommendations Row -->
+<div class="charts-row" style="margin-top: 24px;">
+    <!-- Model Explanation Summary -->
+    <div class="card chart-card flex-1">
+        <h3><i class="fa-solid fa-newspaper text-blue"></i> Model Explanation Summary</h3>
+        <p class="summary-body-text">
+            {{ comparison.summary_text }}
+        </p>
+
+        <div class="driver-tags-container">
+            <div class="tag-group">
+                <span class="tag-title text-red"><i class="fa-solid fa-arrow-trend-up"></i> Key Risk Drivers:</span>
+                <div class="tag-list">
+                    {% for item in comparison.key_risk_drivers %}
+                        <span class="risk-tag tag-red">{{ item }}</span>
+                    {% else %}
+                        <span class="text-muted">None jointly flagged as major risk</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="tag-group" style="margin-top: 14px;">
+                <span class="tag-title text-green"><i class="fa-solid fa-shield-halved"></i> Protective Buffers:</span>
+                <div class="tag-list">
+                    {% for item in comparison.protective_factors %}
+                        <span class="risk-tag tag-green">{{ item }}</span>
+                    {% else %}
+                        <span class="text-muted">Limited protective factors detected</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% if comparison.divergent_factors %}
+            <div class="tag-group" style="margin-top: 14px;">
+                <span class="tag-title text-orange"><i class="fa-solid fa-code-branch"></i> Divergent Attributions:</span>
+                <div class="tag-list">
+                    {% for item in comparison.divergent_factors %}
+                        <span class="risk-tag tag-orange">{{ item }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 
-    <div class="xai-dual-panel">
-        <!-- SHAP Column -->
-        <div class="xai-col">
-            <h4><i class="fa-solid fa-chart-column text-blue"></i> SHAP Waterfall Breakdown</h4>
-            <div class="features-list">
-                {% for item in latest_prediction.shap_explanation %}
-                <div class="feature-item">
-                    <span class="feature-name">{{ item.display_name }}</span>
-                    <div class="impact-bar-container">
-                        {% if item.shap_value >= 0 %}
-                        <div class="impact-bar red" style="width: {{ [((item.shap_value|abs / 0.5) * 85)|round|int + 15, 100]|min }}%;">
-                            +{{ item.shap_value }}
-                        </div>
-                        {% else %}
-                        <div class="impact-bar green right-align" style="width: {{ [((item.shap_value|abs / 0.5) * 85)|round|int + 15, 100]|min }}%;">
-                            {{ item.shap_value }}
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-                {% endfor %}
+    <!-- Actionable Responsible Lending Recommendations -->
+    <div class="card chart-card flex-1">
+        <h3><i class="fa-solid fa-lightbulb text-orange"></i> Actionable Underwriting Recommendations</h3>
+        <p class="section-desc">Data-driven guidance derived from identified risk drivers (advisory; not guaranteed outcomes).</p>
+        
+        <div class="recommendations-list">
+            {% for rec in comparison.recommendations %}
+            <div class="rec-item">
+                <div class="rec-icon"><i class="fa-solid fa-compass-drafting"></i></div>
+                <div class="rec-text">{{ rec }}</div>
             </div>
-        </div>
-
-        <!-- LIME Column -->
-        <div class="xai-col">
-            <h4><i class="fa-solid fa-crosshairs text-purple"></i> LIME Local Surrogate Rules</h4>
-            <div class="features-list">
-                {% for item in latest_prediction.lime_explanation %}
-                <div class="feature-item">
-                    <span class="feature-name lime-condition">{{ item.condition }}</span>
-                    <div class="impact-bar-container">
-                        {% if item.weight >= 0 %}
-                        <div class="impact-bar red" style="width: {{ [((item.weight|abs / 0.5) * 85)|round|int + 15, 100]|min }}%;">
-                            +{{ item.weight }}
-                        </div>
-                        {% else %}
-                        <div class="impact-bar green right-align" style="width: {{ [((item.weight|abs / 0.5) * 85)|round|int + 15, 100]|min }}%;">
-                            {{ item.weight }}
-                        </div>
-                        {% endif %}
-                    </div>
+            {% endfor %}
+            <div class="rec-item rec-policy">
+                <div class="rec-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+                <div class="rec-text">
+                    <strong>Regulatory Compliance Note:</strong> Explainability outputs must supplement, not replace, human credit underwriting judgment in accordance with fair lending principles.
                 </div>
-                {% endfor %}
             </div>
         </div>
     </div>
+</div>
+
+{% else %}
+<div class="card empty-state-card">
+    <i class="fa-solid fa-folder-open"></i>
+    <h3>No Applicant Selected</h3>
+    <p>Please select an applicant from the directory to inspect their SHAP vs LIME comparison.</p>
 </div>
 {% endif %}
-{% endblock %}
-
-{% block scripts %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('globalShapChart');
-    if (ctx) {
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Credit Score', 'Loan Amount', 'Existing Loans', 'Monthly Income', 'Loan Term', 'Employment Exp', 'Interest Rate', 'Age', 'Employment Type', 'Loan Purpose'],
-                datasets: [{
-                    label: 'Mean |SHAP Value| (Impact on Default)',
-                    data: [0.38, 0.29, 0.21, 0.17, 0.14, 0.11, 0.09, 0.08, 0.06, 0.04],
-                    backgroundColor: '#0A58CA',
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        grid: { color: '#F1F5F9' },
-                        title: { display: true, text: 'Mean Absolute SHAP Value' }
-                    },
-                    y: {
-                        grid: { display: false }
-                    }
-                }
-            }
-        });
-    }
-});
-</script>
 {% endblock %}

@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}SHAP Explanation - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="welcome-section">
+        <h1><i class="fa-solid fa-asterisk text-blue"></i> SHAP Feature Attribution Analysis</h1>
+        <p>Game-theoretic Shapley value decomposition for individual loan default predictions.</p>
+    </div>
+    <div class="header-actions">
+        <!-- Applicant Selector Dropdown -->
+        <form method="GET" action="{{ url_for('shap_explanation') }}" class="applicant-select-form">
+            <label for="applicantSelect" class="form-label-inline"><i class="fa-solid fa-user-check"></i> Select Applicant:</label>
+            <select name="id" id="applicantSelect" class="custom-select" onchange="this.form.submit()">
+                {% for p in all_predictions %}
+                <option value="{{ p.id }}" {% if prediction and p.id == prediction.id %}selected{% endif %}>
+                    #{{ p.id }} - {{ p.applicant_name }} ({{ p.prediction }})
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+
+{% if prediction %}
+<!-- Applicant Overview Banner -->
+<div class="card applicant-hero-card">
+    <div class="hero-left">
+        <div class="avatar-circle">
+            <i class="fa-solid fa-user"></i>
+        </div>
+        <div>
+            <h2>{{ prediction.applicant_name }} <span class="badge-sub">Application #{{ prediction.id }}</span></h2>
+            <div class="applicant-meta-chips">
+                <span><i class="fa-solid fa-briefcase"></i> {{ prediction.employment_type }}</span>
+                <span><i class="fa-solid fa-wallet"></i> ₹{{ "{:,.0f}".format(prediction.monthly_income) }}/mo</span>
+                <span><i class="fa-solid fa-gauge"></i> Credit: <strong>{{ prediction.credit_score }}</strong></span>
+                <span><i class="fa-solid fa-hand-holding-dollar"></i> Loan: <strong>₹{{ "{:,.0f}".format(prediction.loan_amount) }}</strong> ({{ prediction.loan_term }} mo)</span>
+            </div>
+        </div>
+    </div>
+    <div class="hero-right">
+        <div class="score-pill-large {{ 'bg-red-subtle' if prediction.prediction == 'Default' else 'bg-green-subtle' }}">
+            <div class="pill-label">Model Prediction</div>
+            <div class="pill-val {{ 'text-red' if prediction.prediction == 'Default' else 'text-green' }}">
+                {{ prediction.prediction|upper }}
+            </div>
+            <div class="pill-sub">P(Default) = <strong>{{ "%.2f"|format(prediction.default_probability * 100) }}%</strong></div>
+        </div>
+    </div>
+</div>
+
+<!-- SHAP Baseline Notice Card -->
+<div class="card baseline-callout">
+    <div class="callout-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+    <div class="callout-content">
+        <h4>Model Baseline Expectation (Base Value): <span class="text-primary">{{ (shap_data.base_value * 100)|round(1) }}%</span></h4>
+        <p>
+            SHAP explains how each individual feature pushes the model's prediction <em>away from the global baseline expectation</em> toward Default or Non-Default.
+            Features with <strong>positive SHAP values</strong> (+&Delta;) increased predicted default risk for this applicant. 
+            Features with <strong>negative SHAP values</strong> (&minus;&Delta;) mitigated risk and protected against default.
+        </p>
+    </div>
+</div>
+
+<!-- SHAP Visual Waterfall / Impact Chart -->
+<div class="card chart-card" style="margin-top: 20px;">
+    <div class="card-header-flex">
+        <div>
+            <h3>SHAP Local Feature Contributions to P(Default)</h3>
+            <p class="section-desc">Ranked by absolute attribution magnitude (|&Phi;|) using TreeExplainer on Random Forest.</p>
+        </div>
+        <div class="chart-legend-pill">
+            <span class="dot red"></span> Increases Default Risk &nbsp;|&nbsp;
+            <span class="dot green"></span> Decreases Default Risk
+        </div>
+    </div>
+    <div class="chart-container" style="height: 380px;">
+        <canvas id="shapWaterfallChart"></canvas>
+    </div>
+</div>
+
+<!-- Detailed SHAP Feature Attribution Table -->
+<div class="card recent-predictions-card" style="margin-top: 24px;">
+    <div class="card-header-flex">
+        <h3>Feature-by-Feature SHAP Breakdown</h3>
+        <span class="text-muted">Target Class: P(Default)</span>
+    </div>
+    <div class="table-responsive">
+        <table class="predictions-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Applicant Value</th>
+                    <th>SHAP Contribution (&Phi;)</th>
+                    <th>Direction of Impact</th>
+                    <th>Technical & Business Interpretation</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in shap_data.features %}
+                <tr>
+                    <td><strong>{{ f.display_name }}</strong></td>
+                    <td><code>{{ f.applicant_value }}</code></td>
+                    <td>
+                        <strong class="{{ 'text-red' if f.shap_value > 0 else ('text-green' if f.shap_value < 0 else 'text-muted') }}">
+                            {{ '+' if f.shap_value > 0 else '' }}{{ f.shap_value }}
+                        </strong>
+                    </td>
+                    <td>
+                        {% if f.shap_value > 0 %}
+                            <span class="badge badge-default"><i class="fa-solid fa-arrow-trend-up"></i> Increases Risk</span>
+                        {% elif f.shap_value < 0 %}
+                            <span class="badge badge-success"><i class="fa-solid fa-arrow-trend-down"></i> Decreases Risk</span>
+                        {% else %}
+                            <span class="badge badge-secondary">Neutral</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="interpretation-text">{{ f.interpretation }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Theoretical Foundations -->
+<div class="xai-theory-grid" style="margin-top: 24px;">
+    <div class="card theory-card">
+        <h4><i class="fa-solid fa-graduation-cap"></i> Cooperative Game Theory</h4>
+        <p>
+            Developed by Nobel Laureate Lloyd Shapley (1953), Shapley values assess the marginal contribution of each feature across all possible feature subsets (coalitions). This guarantees efficiency, symmetry, and additivity.
+        </p>
+    </div>
+    <div class="card theory-card">
+        <h4><i class="fa-solid fa-square-check"></i> Additive Feature Attribution</h4>
+        <p>
+            The sum of all feature attributions plus the base value equals the predicted probability for the applicant:
+            <code>f(x) = E[f(x)] + &sum; &Phi;<sub>i</sub></code>.
+        </p>
+    </div>
+</div>
+
+<script>
+    window.shapChartData = {
+        labels: {{ shap_data.features | map(attribute='display_name') | list | tojson }},
+        values: {{ shap_data.features | map(attribute='shap_value') | list | tojson }},
+        baseValue: {{ shap_data.base_value }}
+    };
+</script>
+
+{% else %}
+<div class="card empty-state-card">
+    <i class="fa-solid fa-folder-open"></i>
+    <h3>No Applicant Selected</h3>
+    <p>Please select an applicant from the directory to inspect their SHAP attributions.</p>
+</div>
+{% endif %}
+{% endblock %}

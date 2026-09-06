@@ -1,0 +1,126 @@
+{% extends 'user/user_base.html' %}
+{% block title %}My Predictions - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="user-page-header">
+    <div class="header-info">
+        <h1><i class="fa-solid fa-clock-rotate-left"></i> My Loan Assessment History</h1>
+        <p>Review your personal historical loan applications, risk predictions, and explainability audits.</p>
+    </div>
+    <div class="header-action">
+        <a href="{{ url_for('user_assess') }}" class="btn-primary">
+            <i class="fa-solid fa-plus"></i> New Assessment
+        </a>
+    </div>
+</div>
+
+<!-- Controls: Filter, Search, and Export -->
+<div class="user-table-controls-card">
+    <div class="filter-tabs">
+        <a href="{{ url_for('user_predictions_page', status='All', search=search_query) }}" class="filter-tab {% if current_status == 'All' %}active{% endif %}">
+            All ({{ predictions|length if current_status == 'All' else 'All' }})
+        </a>
+        <a href="{{ url_for('user_predictions_page', status='Non-Default', search=search_query) }}" class="filter-tab {% if current_status == 'Non-Default' %}active{% endif %}">
+            Approved / Non-Default
+        </a>
+        <a href="{{ url_for('user_predictions_page', status='Default', search=search_query) }}" class="filter-tab {% if current_status == 'Default' %}active{% endif %}">
+            High Risk / Default
+        </a>
+    </div>
+
+    <div class="table-actions-group">
+        <form method="GET" action="{{ url_for('user_predictions_page') }}" class="search-form">
+            <input type="hidden" name="status" value="{{ current_status }}">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" name="search" placeholder="Search by purpose or amount..." value="{{ search_query }}">
+            </div>
+            {% if search_query %}
+            <a href="{{ url_for('user_predictions_page', status=current_status) }}" class="clear-search" title="Clear search">&times;</a>
+            {% endif %}
+        </form>
+
+        <div class="export-dropdown">
+            <a href="{{ url_for('user_export_pdf', status=current_status, search=search_query) }}" class="btn-export btn-pdf" title="Export as PDF">
+                <i class="fa-solid fa-file-pdf"></i> PDF
+            </a>
+            <a href="{{ url_for('user_export_docx', status=current_status, search=search_query) }}" class="btn-export btn-docx" title="Export as Word DOCX">
+                <i class="fa-solid fa-file-word"></i> DOCX
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Predictions Table Card -->
+<div class="recent-predictions-card">
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th># ID</th>
+                    <th>Assessment Date</th>
+                    <th>Loan Purpose</th>
+                    <th>Loan Amount</th>
+                    <th>Term</th>
+                    <th>Credit Score</th>
+                    <th>Prediction</th>
+                    <th>Default Prob</th>
+                    <th>Risk Tier</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in predictions %}
+                <tr>
+                    <td><strong>#{{ p.id }}</strong></td>
+                    <td>{{ p.formatted_date }}</td>
+                    <td><span class="purpose-tag">{{ p.loan_purpose or 'Personal' }}</span></td>
+                    <td><strong>₹{{ '{:,.0f}'.format(p.loan_amount or 0) }}</strong></td>
+                    <td>{{ p.loan_term }} mo</td>
+                    <td>{{ p.credit_score }}</td>
+                    <td>
+                        <span class="status-pill {{ 'pill-danger' if p.prediction == 'Default' else 'pill-success' }}">
+                            {{ p.prediction }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="prob-cell">
+                            <span>{{ '%.1f'|format((p.default_probability or 0) * 100) }}%</span>
+                            <div class="mini-bar">
+                                <div class="mini-bar-fill {{ 'fill-danger' if (p.default_probability or 0) >= 0.5 else 'fill-success' }}" style="width: {{ (p.default_probability or 0) * 100 }}%;"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="risk-badge {{ 'badge-danger' if 'High' in (p.risk_level or '') else ('badge-warning' if 'Medium' in (p.risk_level or '') else 'badge-success') }}">
+                            {{ p.risk_level }}
+                        </span>
+                    </td>
+                    <td style="text-align: right;">
+                        <div class="row-actions">
+                            <a href="{{ url_for('user_prediction_detail', prediction_id=p.id) }}" class="action-btn" title="View Full Details">
+                                <i class="fa-regular fa-eye"></i> View
+                            </a>
+                            <a href="{{ url_for('user_shap_page', id=p.id) }}" class="action-btn" title="Inspect SHAP Values">
+                                <i class="fa-solid fa-asterisk"></i> SHAP
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="10" class="empty-state-cell">
+                        <i class="fa-solid fa-folder-open empty-icon"></i>
+                        <h3>No assessment records found</h3>
+                        <p>No applications match the current filter or search criteria.</p>
+                        <a href="{{ url_for('user_assess') }}" class="btn-primary" style="margin-top: 1rem; display: inline-block;">
+                            Assess a Loan Now
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

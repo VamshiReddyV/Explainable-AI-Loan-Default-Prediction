@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - LoanPredict AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/user_dashboard.css">
+    
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Overlay (mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- User Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-chart-simple"></i>
+                </div>
+                <div class="logo-text">
+                    <h2>LoanPredict AI</h2>
+                    <span class="subtext">Borrower Portal</span>
+                </div>
+                <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close sidebar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section-label">MAIN MENU</div>
+                <a href="/user/dashboard" class="nav-item active">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/user/assess" class="nav-item ">
+                    <i class="fa-solid fa-calculator"></i>
+                    <span>Assess My Loan</span>
+                </a>
+                <a href="/user/apply" class="nav-item ">
+                    <i class="fa-solid fa-file-circle-plus"></i>
+                    <span>Apply Loan</span>
+                </a>
+                <a href="/user/applications" class="nav-item ">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <span>My Applications</span>
+                </a>
+
+                <div class="nav-section-label">EXPLAINABILITY</div>
+                <a href="/user/shap" class="nav-item ">
+                    <i class="fa-solid fa-asterisk"></i>
+                    <span>SHAP Explanation</span>
+                </a>
+                <a href="/user/lime" class="nav-item ">
+                    <i class="fa-solid fa-crosshairs"></i>
+                    <span>LIME Explanation</span>
+                </a>
+                <a href="/user/shap-vs-lime" class="nav-item ">
+                    <i class="fa-solid fa-code-compare"></i>
+                    <span>SHAP vs LIME</span>
+                </a>
+
+                <div class="nav-section-label">FINANCIAL HEALTH</div>
+                <a href="/user/financial-profile" class="nav-item ">
+                    <i class="fa-solid fa-wallet"></i>
+                    <span>Financial Profile</span>
+                </a>
+                <a href="/user/recommendations" class="nav-item ">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Recommendations</span>
+                </a>
+
+                <div class="nav-section-label">ACCOUNT</div>
+                <a href="/user/profile" class="nav-item ">
+                    <i class="fa-regular fa-user"></i>
+                    <span>My Profile</span>
+                </a>
+                <a href="/user/settings" class="nav-item ">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="/user/support" class="nav-item ">
+                    <i class="fa-regular fa-circle-question"></i>
+                    <span>Help & Support</span>
+                </a>
+                <a href="/logout" class="nav-item">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="footer-card">
+                    <div class="footer-badge-icon">
+                        <div class="gauge-graphic">
+                            <i class="fa-solid fa-gauge-high"></i>
+                        </div>
+                    </div>
+                    <p class="footer-text">AI Powered. Transparent.<br><strong>Smarter Lending Decisions.</strong></p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content" id="mainContent">
+            <!-- Top Bar Header -->
+            <header class="user-topbar">
+                <div class="topbar-left">
+                    <button type="button" class="hamburger-btn" id="hamburgerBtn" aria-label="Open sidebar menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <span class="portal-badge"><i class="fa-solid fa-user-check"></i> Borrower Portal</span>
+                </div>
+                <div class="topbar-right">
+                    <div class="date-badge">
+                        <i class="fa-regular fa-calendar"></i>
+                        <span>September 06, 2026</span>
+                    </div>
+                    <div class="user-profile-dropdown" id="userPortalDropdown">
+                        <div class="user-profile" id="userPortalProfileTrigger" tabindex="0">
+                            <div class="avatar bg-blue"><i class="fa-regular fa-user"></i></div>
+                            <div class="user-info">
+                                <span class="user-name">Rahul Sharma</span>
+                                <span class="user-role">Applicant <i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                        </div>
+                        <div class="dropdown-menu" id="userPortalDropdownMenu">
+                            <div class="dropdown-header">
+                                <div class="dropdown-avatar"><i class="fa-solid fa-user-circle"></i></div>
+                                <div>
+                                    <strong>Rahul Sharma</strong>
+                                    <span>rahul@example.com</span>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="/user/profile" class="dropdown-item">
+                                <i class="fa-regular fa-user"></i> My Profile
+                            </a>
+                            <a href="/user/financial-profile" class="dropdown-item">
+                                <i class="fa-solid fa-wallet"></i> Financial Profile
+                            </a>
+                            <a href="/user/settings" class="dropdown-item">
+                                <i class="fa-solid fa-sliders"></i> Preferences
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="/logout" class="dropdown-item text-danger">
+                                <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Flash Alerts -->
+            
+                
+            
+
+            
+<!-- Welcome Banner -->
+<div class="user-welcome-banner">
+    <div class="welcome-text">
+        <h1><i class="fa-solid fa-hand-wave"></i> Welcome back, Rahul Sharma!</h1>
+        <p>Here's your latest loan risk assessment overview.</p>
+    </div>
+    <div class="welcome-date">
+        <i class="fa-regular fa-calendar"></i>
+        <span>September 06, 2026</span>
+    </div>
+</div>
+
+<!-- Top Metric Cards Row -->
+<div class="user-metrics-grid">
+    <!-- Default Probability Card -->
+    <div class="metric-card metric-probability">
+        <div class="metric-icon-wrap bg-blue-light">
+            <i class="fa-solid fa-chart-pie"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Default Probability</span>
+            <h2 class="metric-value">15.13%</h2>
+            <span class="metric-change change-up">
+                ↑ 13.19% from last prediction
+            </span>
+        </div>
+    </div>
+
+    <!-- Risk Category Card -->
+    <div class="metric-card metric-risk">
+        <div class="metric-icon-wrap bg-green-light">
+            <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Risk Category</span>
+            <h2 class="metric-value">
+                <span class="risk-badge badge-success">LOW RISK</span>
+            </h2>
+            <span class="metric-subtext">You are in a safe zone</span>
+        </div>
+    </div>
+
+    <!-- Credit Score Card -->
+    <div class="metric-card metric-credit">
+        <div class="metric-icon-wrap bg-purple-light">
+            <i class="fa-solid fa-gauge-high"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Credit Score</span>
+            <h2 class="metric-value">770</h2>
+            <span class="metric-subtext">Excellent</span>
+        </div>
+    </div>
+
+    <!-- Loan Amount Card -->
+    <div class="metric-card metric-loan">
+        <div class="metric-icon-wrap bg-teal-light">
+            <i class="fa-solid fa-indian-rupee-sign"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Latest Loan Amount</span>
+            <h2 class="metric-value">₹3,500,000</h2>
+            <span class="metric-subtext">Most recent application</span>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="user-charts-row">
+    <!-- Default Probability Trend Chart -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3><i class="fa-solid fa-chart-line"></i> Default Probability Trend</h3>
+        </div>
+        <div class="chart-body">
+            <canvas id="userProbTrendChart" height="220"></canvas>
+        </div>
+    </div>
+
+    <!-- Risk Overview Donut -->
+    <div class="chart-card chart-card-small">
+        <div class="chart-header">
+            <h3><i class="fa-solid fa-chart-pie"></i> Risk Overview</h3>
+        </div>
+        <div class="chart-body donut-wrap">
+            <canvas id="userRiskDonut" height="200"></canvas>
+            <div class="donut-legend">
+                <div class="legend-item"><span class="dot dot-green"></span> Low 62.5%</div>
+                <div class="legend-item"><span class="dot dot-orange"></span> Medium 18.8%</div>
+                <div class="legend-item"><span class="dot dot-red"></span> High 18.8%</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Insights & Recommendations Row -->
+<div class="user-insights-row">
+    <!-- Key Insights -->
+    <div class="insights-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-lightbulb"></i> Key Insights</h3>
+        </div>
+        <div class="insights-list">
+            
+            <div class="insight-item">
+                <div class="insight-icon text-red">
+                    <i class="fa-solid fa-arrow-trend-up"></i>
+                </div>
+                <div class="insight-body">
+                    <strong>Risk Escalation Notice</strong>
+                    <p>Your default risk increased by 13.19% due to requested loan terms and active exposure.</p>
+                </div>
+            </div>
+            
+            <div class="insight-item">
+                <div class="insight-icon text-blue">
+                    <i class="fa-solid fa-briefcase"></i>
+                </div>
+                <div class="insight-body">
+                    <strong>Positive Income Stability</strong>
+                    <p>Your salaried status and monthly earnings (₹95,000) provide a positive protective buffer.</p>
+                </div>
+            </div>
+            
+            <div class="insight-item">
+                <div class="insight-icon text-green">
+                    <i class="fa-solid fa-shield-check"></i>
+                </div>
+                <div class="insight-body">
+                    <strong>Solid Credit Profile</strong>
+                    <p>Your credit score of 770 (Excellent) strengthens your underwriting credibility.</p>
+                </div>
+            </div>
+            
+            <div class="insight-item">
+                <div class="insight-icon text-purple">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+                <div class="insight-body">
+                    <strong>Risk Category Status</strong>
+                    <p>You are currently positioned in the LOW RISK tier (You are in a safe zone).</p>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="recommendations-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-wand-magic-sparkles"></i> AI Recommendations</h3>
+        </div>
+        <ul class="rec-list">
+            
+            <li><i class="fa-solid fa-check-circle"></i> Consider adjusting your loan amount to under ₹475,000 to improve debt burden ratios.</li>
+            
+        </ul>
+    </div>
+</div>
+
+<!-- Recent Predictions Table -->
+<div class="recent-predictions-card">
+    <div class="card-header">
+        <h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Predictions</h3>
+        <a href="/user/predictions" class="view-all-link">View All <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Loan Amount</th>
+                    <th>Credit Score</th>
+                    <th>Prediction</th>
+                    <th>Probability</th>
+                    <th>Risk Level</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>33</td>
+                    <td>06 Sep 2026</td>
+                    <td>₹3,500,000</td>
+                    <td>770</td>
+                    <td>
+                        <span class="status-pill pill-success">
+                            Non-Default
+                        </span>
+                    </td>
+                    <td>15.13%</td>
+                    <td>
+                        <span class="risk-badge badge-success">
+                            Low Risk
+                        </span>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>32</td>
+                    <td>06 Sep 2026</td>
+                    <td>₹200,000</td>
+                    <td>740</td>
+                    <td>
+                        <span class="status-pill pill-success">
+                            Non-Default
+                        </span>
+                    </td>
+                    <td>1.94%</td>
+                    <td>
+                        <span class="risk-badge badge-success">
+                            Low Risk
+                        </span>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>31</td>
+                    <td>06 Sep 2026</td>
+                    <td>₹200,000</td>
+                    <td>740</td>
+                    <td>
+                        <span class="status-pill pill-success">
+                            Non-Default
+                        </span>
+                    </td>
+                    <td>1.94%</td>
+                    <td>
+                        <span class="risk-badge badge-success">
+                            Low Risk
+                        </span>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>30</td>
+                    <td>06 Sep 2026</td>
+                    <td>₹200,000</td>
+                    <td>740</td>
+                    <td>
+                        <span class="status-pill pill-success">
+                            Non-Default
+                        </span>
+                    </td>
+                    <td>1.94%</td>
+                    <td>
+                        <span class="risk-badge badge-success">
+                            Low Risk
+                        </span>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>29</td>
+                    <td>06 Sep 2026</td>
+                    <td>₹200,000</td>
+                    <td>740</td>
+                    <td>
+                        <span class="status-pill pill-success">
+                            Non-Default
+                        </span>
+                    </td>
+                    <td>1.94%</td>
+                    <td>
+                        <span class="risk-badge badge-success">
+                            Low Risk
+                        </span>
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+</div>
+
+        </main>
+    </div>
+
+    <!-- Floating AI Chat Assistant Launcher -->
+    <button type="button" class="ai-chat-launcher" id="aiChatLauncher" aria-label="Open AI Loan Assistant">
+        <i class="fa-solid fa-wand-magic-sparkles" id="aiChatIcon"></i>
+        <span class="chat-launcher-badge"></span>
+    </button>
+
+    <!-- Floating AI Chat Assistant Window -->
+    <div class="ai-chat-window" id="aiChatWindow">
+        <div class="chat-header">
+            <div class="chat-header-profile">
+                <div class="chat-bot-avatar">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div class="chat-header-text">
+                    <h4>LoanPredict AI Assistant</h4>
+                    <span><i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> Online • Instant Answers</span>
+                </div>
+            </div>
+            <div class="chat-header-actions">
+                <button type="button" class="chat-action-btn" id="aiChatClearBtn" title="Clear Chat">
+                    <i class="fa-regular fa-trash-can"></i>
+                </button>
+                <button type="button" class="chat-action-btn" id="aiChatCloseBtn" title="Close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-messages-container" id="chatMessages">
+            <div class="chat-message bot">
+                <div class="chat-bubble">
+                    Hello! 👋 I'm your <strong>LoanPredict AI Assistant</strong>.<br>
+                    I can explain your SHAP/LIME risk factors, simulate loan terms, or advise on how to lower your default probability. What would you like to know?
+                    <span class="chat-timestamp">Just now</span>
+                </div>
+            </div>
+            <div class="typing-indicator" id="chatTyping">
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+            </div>
+        </div>
+
+        <div class="chat-quick-prompts">
+            <button type="button" class="chat-chip" data-query="How to lower default risk?">💡 Lower Risk</button>
+            <button type="button" class="chat-chip" data-query="Explain SHAP vs LIME">🔍 SHAP vs LIME</button>
+            <button type="button" class="chat-chip" data-query="What is a good credit score?">⭐ Good Credit Score</button>
+            <button type="button" class="chat-chip" data-query="How to get lower interest rates?">📉 Lower Interest</button>
+            <button type="button" class="chat-chip" data-query="What causes High Risk?">⚠️ High Risk Drivers</button>
+        </div>
+
+        <form class="chat-input-row" id="chatInputForm" onsubmit="event.preventDefault(); sendChatMessage();">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Ask about loans, SHAP, credit score..." autocomplete="off">
+            <button type="submit" class="chat-send-btn" id="chatSendBtn" aria-label="Send message">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </form>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+    <script>
+    // ===== Scroll Reset on Page Load =====
+    if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+    }
+    window.addEventListener('DOMContentLoaded', function() {
+        window.scrollTo(0, 0);
+        var mc = document.getElementById('mainContent');
+        if (mc) mc.scrollTop = 0;
+    });
+
+    // ===== Mobile Hamburger Sidebar Toggle =====
+    (function() {
+        var hamburger = document.getElementById('hamburgerBtn');
+        var sidebar = document.getElementById('sidebar');
+        var overlay = document.getElementById('sidebarOverlay');
+        var closeBtn = document.getElementById('sidebarCloseBtn');
+
+        function openSidebar() {
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        if (hamburger) hamburger.addEventListener('click', openSidebar);
+        if (overlay) overlay.addEventListener('click', closeSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+    })();
+
+    // ===== User Portal Dropdown Toggle =====
+    const userTrigger = document.getElementById('userPortalProfileTrigger');
+    const userMenu = document.getElementById('userPortalDropdownMenu');
+    if (userTrigger && userMenu) {
+        userTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userMenu.classList.toggle('show');
+        });
+        document.addEventListener('click', (e) => {
+            if (!userTrigger.contains(e.target) && !userMenu.contains(e.target)) {
+                userMenu.classList.remove('show');
+            }
+        });
+    }
+
+    // ===== AI Chat Assistant Widget Logic (Connected to Backend API) =====
+    (function() {
+        const launcher = document.getElementById('aiChatLauncher');
+        const chatWindow = document.getElementById('aiChatWindow');
+        const closeBtn = document.getElementById('aiChatCloseBtn');
+        const clearBtn = document.getElementById('aiChatClearBtn');
+        const chatInput = document.getElementById('chatInput');
+        const chatMessages = document.getElementById('chatMessages');
+        const typingIndicator = document.getElementById('chatTyping');
+        const chips = document.querySelectorAll('.chat-chip');
+
+        if (!launcher || !chatWindow) return;
+
+        function toggleChat() {
+            chatWindow.classList.toggle('open');
+            if (chatWindow.classList.contains('open')) {
+                chatInput.focus();
+                scrollChatToBottom();
+            }
+        }
+
+        launcher.addEventListener('click', toggleChat);
+        closeBtn.addEventListener('click', toggleChat);
+
+        clearBtn.addEventListener('click', () => {
+            chatMessages.querySelectorAll('.chat-message').forEach((m, idx) => {
+                if (idx > 0) m.remove(); // keep welcome
+            });
+        });
+
+        chips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                const query = chip.getAttribute('data-query');
+                chatInput.value = query;
+                sendChatMessage();
+            });
+        });
+
+        function scrollChatToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function getTimeStr() {
+            const now = new Date();
+            return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        window.sendChatMessage = async function() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            // Add user message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'chat-message user';
+            userMsg.innerHTML = `
+                <div class="chat-bubble">
+                    ${escapeHtml(text)}
+                    <span class="chat-timestamp">${getTimeStr()}</span>
+                </div>
+            `;
+            chatMessages.insertBefore(userMsg, typingIndicator);
+            chatInput.value = '';
+            scrollChatToBottom();
+
+            // Show typing indicator
+            typingIndicator.style.display = 'flex';
+            scrollChatToBottom();
+
+            try {
+                const response = await fetch('/user/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+                const data = await response.json();
+                typingIndicator.style.display = 'none';
+
+                const botMsg = document.createElement('div');
+                botMsg.className = 'chat-message bot';
+                botMsg.innerHTML = `
+                    <div class="chat-bubble">
+                        ${data.reply || 'Sorry, I could not process your request.'}
+                        <span class="chat-timestamp">${getTimeStr()}</span>
+                    </div>
+                `;
+                chatMessages.insertBefore(botMsg, typingIndicator);
+                scrollChatToBottom();
+            } catch (err) {
+                typingIndicator.style.display = 'none';
+                const errMsg = document.createElement('div');
+                errMsg.className = 'chat-message bot';
+                errMsg.innerHTML = `
+                    <div class="chat-bubble">
+                        Sorry, I'm having trouble connecting. Please try again in a moment.
+                        <span class="chat-timestamp">${getTimeStr()}</span>
+                    </div>
+                `;
+                chatMessages.insertBefore(errMsg, typingIndicator);
+                scrollChatToBottom();
+            }
+        };
+
+        function escapeHtml(string) {
+            const div = document.createElement('div');
+            div.textContent = string;
+            return div.innerHTML;
+        }
+    })();
+    </script>
+    
+<script>
+// --- Default Probability Trend Line Chart ---
+const trendLabels = ["Sep 06", "Sep 06", "Sep 06", "Sep 06", "Sep 06", "Sep 06", "Sep 06", "Sep 06"];
+const trendData = [50.86, 2.67, 2.67, 1.94, 1.94, 1.94, 1.94, 15.13];
+
+if (document.getElementById('userProbTrendChart') && trendLabels.length > 0) {
+    const ctx1 = document.getElementById('userProbTrendChart').getContext('2d');
+    const gradient = ctx1.createLinearGradient(0, 0, 0, 220);
+    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.25)');
+    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.02)');
+
+    new Chart(ctx1, {
+        type: 'line',
+        data: {
+            labels: trendLabels,
+            datasets: [{
+                label: 'Default Probability (%)',
+                data: trendData,
+                borderColor: '#3B82F6',
+                backgroundColor: gradient,
+                borderWidth: 2.5,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#3B82F6',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#F1F5F9' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+
+// --- Risk Overview Donut Chart ---
+const riskOverview = {"high": 18.8, "high_count": 6, "low": 62.5, "low_count": 20, "med_count": 6, "medium": 18.8, "total": 32};
+
+if (document.getElementById('userRiskDonut')) {
+    new Chart(document.getElementById('userRiskDonut').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+            datasets: [{
+                data: [riskOverview.low_count, riskOverview.med_count, riskOverview.high_count],
+                backgroundColor: ['#10B981', '#F59E0B', '#EF4444'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+</script>
+
+</body>
+</html>

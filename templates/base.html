@@ -36,31 +36,31 @@
                     <i class="fa-solid fa-house"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="{{ url_for('new_prediction') }}" class="nav-item {% if request.endpoint == 'new_prediction' %}active{% endif %}">
-                    <i class="fa-solid fa-circle-plus"></i>
-                    <span>New Loan Prediction</span>
-                </a>
-                <a href="{{ url_for('history') }}" class="nav-item {% if request.endpoint == 'history' %}active{% endif %}">
+                <a href="{{ url_for('history') }}" class="nav-item {% if request.endpoint in ['history', 'view_prediction'] %}active{% endif %}">
                     <i class="fa-solid fa-clock-rotate-left"></i>
                     <span>My Predictions</span>
                 </a>
-                <a href="{{ url_for('model_performance') }}" class="nav-item {% if request.endpoint == 'model_performance' %}active{% endif %}">
+                <a href="{{ url_for('model_performance') }}" class="nav-item {% if request.endpoint in ['model_performance', 'risk_analysis'] %}active{% endif %}">
                     <i class="fa-solid fa-shield-halved"></i>
                     <span>Risk Analysis</span>
                 </a>
 
                 <div class="nav-section-label">EXPLAINABILITY</div>
-                <a href="{{ url_for('explainability') }}" class="nav-item {% if request.endpoint == 'explainability' %}active{% endif %}">
+                <a href="{{ url_for('shap_explanation') }}" class="nav-item {% if request.endpoint == 'shap_explanation' %}active{% endif %}">
                     <i class="fa-solid fa-asterisk"></i>
                     <span>SHAP Explanation</span>
                 </a>
-                <a href="{{ url_for('explainability') }}#lime" class="nav-item">
+                <a href="{{ url_for('lime_explanation') }}" class="nav-item {% if request.endpoint == 'lime_explanation' %}active{% endif %}">
                     <i class="fa-solid fa-crosshairs"></i>
                     <span>LIME Explanation</span>
                 </a>
+                <a href="{{ url_for('explainability') }}" class="nav-item {% if request.endpoint == 'explainability' %}active{% endif %}">
+                    <i class="fa-solid fa-code-compare"></i>
+                    <span>SHAP vs LIME Comparison</span>
+                </a>
 
                 <div class="nav-section-label">ACCOUNT</div>
-                <a href="{{ url_for('history') }}" class="nav-item">
+                <a href="{{ url_for('profile') }}" class="nav-item {% if request.endpoint == 'profile' %}active{% endif %}">
                     <i class="fa-regular fa-user"></i>
                     <span>Profile</span>
                 </a>

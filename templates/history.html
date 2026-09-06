@@ -9,11 +9,14 @@
         <p>Comprehensive audit log of all processed loan default risk assessments.</p>
     </div>
     <div class="header-actions">
-        <a href="{{ url_for('export_csv') }}" class="btn btn-secondary">
-            <i class="fa-solid fa-file-arrow-down"></i> Export to CSV
+        <a href="{{ url_for('export_pdf', status=current_status, search=current_search) }}" class="btn btn-secondary" title="Download executive PDF audit report">
+            <i class="fa-solid fa-file-pdf" style="color: #EF4444;"></i> Export to PDF
         </a>
-        <a href="{{ url_for('new_prediction') }}" class="btn btn-primary">
-            <i class="fa-solid fa-circle-plus"></i> New Prediction
+        <a href="{{ url_for('export_docx', status=current_status, search=current_search) }}" class="btn btn-secondary" title="Download formatted Word document">
+            <i class="fa-solid fa-file-word" style="color: #2563EB;"></i> Export to Word
+        </a>
+        <a href="{{ url_for('export_csv', status=current_status, search=current_search) }}" class="btn btn-secondary" title="Download raw CSV">
+            <i class="fa-solid fa-file-csv"></i> Export CSV
         </a>
     </div>
 </div>
@@ -93,12 +96,19 @@
                                          style="width: {{ (p.default_probability * 100)|round(2) }}%"></div>
                                 </div>
                             </div>
-                        </td>
                         <td class="text-muted">{{ p.formatted_date }}</td>
                         <td>
-                            <a href="{{ url_for('view_prediction', prediction_id=p.id) }}" class="btn-view-detail" title="View Full XAI Report">
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Details
-                            </a>
+                            <div class="action-btn-group" style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                <a href="{{ url_for('view_prediction', prediction_id=p.id) }}" class="btn-view-detail" title="View Full XAI Audit">
+                                    <i class="fa-solid fa-eye"></i> View
+                                </a>
+                                <a href="{{ url_for('shap_explanation', id=p.id) }}" class="btn-view-detail" style="background: #EFF6FF; color: #2563EB;" title="Inspect SHAP Values">
+                                    <i class="fa-solid fa-asterisk"></i> SHAP
+                                </a>
+                                <a href="{{ url_for('lime_explanation', id=p.id) }}" class="btn-view-detail" style="background: #FAF5FF; color: #7C3AED;" title="Inspect LIME Rules">
+                                    <i class="fa-solid fa-crosshairs"></i> LIME
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}

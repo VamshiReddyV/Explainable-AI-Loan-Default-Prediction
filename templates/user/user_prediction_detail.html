@@ -1,0 +1,141 @@
+{% extends 'user/user_base.html' %}
+{% block title %}Assessment #{{ prediction.id }} - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="user-page-header">
+    <div class="header-info">
+        <h1>
+            <i class="fa-solid fa-file-lines"></i> Loan Assessment #{{ prediction.id }}
+            <span class="status-pill {{ 'pill-danger' if prediction.prediction == 'Default' else 'pill-success' }}" style="font-size: 0.9rem; margin-left: 0.75rem;">
+                {{ prediction.prediction }}
+            </span>
+        </h1>
+        <p>Evaluated on {{ prediction.formatted_date or prediction.created_at }}. Complete empirical breakdown and explainability report.</p>
+    </div>
+    <div class="header-action">
+        <a href="{{ url_for('user_predictions_page') }}" class="btn-outline">
+            <i class="fa-solid fa-arrow-left"></i> Back to History
+        </a>
+    </div>
+</div>
+
+<!-- Primary Assessment Banner Cards -->
+<div class="user-metrics-grid">
+    <div class="metric-card">
+        <div class="metric-icon-wrap {{ 'bg-red-light' if prediction.prediction == 'Default' else 'bg-green-light' }}">
+            <i class="fa-solid {{ 'fa-circle-xmark' if prediction.prediction == 'Default' else 'fa-circle-check' }}"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Model Inference</span>
+            <h2 class="metric-value">{{ prediction.prediction }}</h2>
+            <span class="metric-subtext">Binary default threshold: 50.0%</span>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon-wrap bg-blue-light">
+            <i class="fa-solid fa-chart-pie"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Default Probability</span>
+            <h2 class="metric-value">{{ '%.2f'|format((prediction.default_probability or 0) * 100) }}%</h2>
+            <span class="metric-subtext">{{ 'High risk of non-payment' if (prediction.default_probability or 0) >= 0.5 else 'Favorable probability score' }}</span>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon-wrap bg-purple-light">
+            <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Risk Category</span>
+            <h2 class="metric-value">
+                <span class="risk-badge {{ 'badge-danger' if 'High' in (prediction.risk_level or '') else ('badge-warning' if 'Medium' in (prediction.risk_level or '') else 'badge-success') }}">
+                    {{ prediction.risk_level }}
+                </span>
+            </h2>
+            <span class="metric-subtext">Portfolio classification tier</span>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon-wrap bg-teal-light">
+            <i class="fa-solid fa-indian-rupee-sign"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Loan Amount</span>
+            <h2 class="metric-value">₹{{ '{:,.0f}'.format(prediction.loan_amount or 0) }}</h2>
+            <span class="metric-subtext">{{ prediction.loan_term }} months @ {{ prediction.interest_rate }}%</span>
+        </div>
+    </div>
+</div>
+
+<!-- Details Grid -->
+<div class="detail-content-grid">
+    <!-- Left Column: Parameters Table -->
+    <div class="detail-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-list-check"></i> Application Parameters</h3>
+        </div>
+        <div class="params-table-wrap">
+            <table class="params-table">
+                <tbody>
+                    <tr><td><strong>Age</strong></td><td>{{ prediction.age }} years</td></tr>
+                    <tr><td><strong>Gender</strong></td><td>{{ prediction.gender }}</td></tr>
+                    <tr><td><strong>Marital Status</strong></td><td>{{ prediction.marital_status }}</td></tr>
+                    <tr><td><strong>Dependents</strong></td><td>{{ prediction.number_of_dependents }}</td></tr>
+                    <tr><td><strong>Employment Type</strong></td><td>{{ prediction.employment_type }}</td></tr>
+                    <tr><td><strong>Experience</strong></td><td>{{ prediction.employment_experience }} years</td></tr>
+                    <tr><td><strong>Monthly Income</strong></td><td>₹{{ '{:,.0f}'.format(prediction.monthly_income or 0) }}</td></tr>
+                    <tr><td><strong>Annual Income</strong></td><td>₹{{ '{:,.0f}'.format(prediction.annual_income or (prediction.monthly_income * 12) if prediction.monthly_income else 0) }}</td></tr>
+                    <tr><td><strong>Credit Score</strong></td><td><strong>{{ prediction.credit_score }}</strong></td></tr>
+                    <tr><td><strong>Loan Purpose</strong></td><td><span class="purpose-tag">{{ prediction.loan_purpose }}</span></td></tr>
+                    <tr><td><strong>Existing Loans</strong></td><td>{{ prediction.existing_loans }} active</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Right Column: Quick Explainability Preview -->
+    <div class="detail-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Explainability Snapshot</h3>
+            <div class="header-links">
+                <a href="{{ url_for('user_comparison_page', id=prediction.id) }}" class="small-link">Compare XAI &rarr;</a>
+            </div>
+        </div>
+        
+        <div class="xai-snapshot-body">
+            <h4>Top SHAP Risk Factors (Game-Theoretic Shapley Values)</h4>
+            <div class="feature-bar-list">
+                {% for feat in shap_data.features[:5] %}
+                <div class="feature-bar-item">
+                    <div class="feature-info">
+                        <span class="feature-name">{{ feat.feature_name }}</span>
+                        <span class="feature-val">val: {{ feat.applicant_value }}</span>
+                    </div>
+                    <div class="feature-progress-wrap">
+                        <div class="feature-progress-fill {{ 'bg-danger' if feat.direction == 'Increases Default Risk' else 'bg-success' }}"
+                             style="width: {{ [((feat.shap_value|abs) * 200), 100]|min }}%;"></div>
+                    </div>
+                    <span class="feature-shap {{ 'text-danger' if feat.direction == 'Increases Default Risk' else 'text-success' }}">
+                        {{ '+' if feat.shap_value > 0 else '' }}{{ '%.3f'|format(feat.shap_value) }}
+                    </span>
+                </div>
+                {% else %}
+                <p class="text-muted">No SHAP breakdown available for this application.</p>
+                {% endfor %}
+            </div>
+
+            <div class="quick-nav-pills" style="margin-top: 1.5rem; display: flex; gap: 0.75rem;">
+                <a href="{{ url_for('user_shap_page', id=prediction.id) }}" class="btn-outline btn-small">
+                    <i class="fa-solid fa-asterisk"></i> View Full SHAP
+                </a>
+                <a href="{{ url_for('user_lime_page', id=prediction.id) }}" class="btn-outline btn-small">
+                    <i class="fa-solid fa-crosshairs"></i> View Full LIME
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

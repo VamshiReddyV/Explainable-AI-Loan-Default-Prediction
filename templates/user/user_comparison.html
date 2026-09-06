@@ -1,0 +1,136 @@
+{% extends 'user/user_base.html' %}
+{% block title %}SHAP vs LIME Comparison - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="user-page-header">
+    <div class="header-info">
+        <h1><i class="fa-solid fa-code-compare"></i> SHAP vs LIME Comparison Studio</h1>
+        <p>Cross-methodological verification comparing Game-Theoretic Shapley values with Local Surrogate rules.</p>
+    </div>
+    <div class="header-action">
+        <form method="GET" action="{{ url_for('user_comparison_page') }}" class="applicant-select-form">
+            <label for="cmpSelect">Select Assessment:</label>
+            <select name="id" id="cmpSelect" onchange="this.form.submit()">
+                {% for p in all_predictions %}
+                <option value="{{ p.id }}" {% if prediction and prediction.id == p.id %}selected{% endif %}>
+                    #{{ p.id }} - {{ p.formatted_date }} (₹{{ '{:,.0f}'.format(p.loan_amount or 0) }}) - {{ p.prediction }}
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+
+{% if prediction %}
+<!-- Agreement Banner Card -->
+<div class="user-metrics-grid" style="margin-bottom: 2rem;">
+    <div class="metric-card">
+        <div class="metric-icon-wrap bg-blue-light">
+            <i class="fa-solid fa-handshake"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Directional Agreement</span>
+            <h2 class="metric-value">{{ agreement_score }}%</h2>
+            <span class="metric-subtext">Both explainers agree on sign</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-icon-wrap {{ 'bg-red-light' if prediction.prediction == 'Default' else 'bg-green-light' }}">
+            <i class="fa-solid fa-chart-pie"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Predicted Outcome</span>
+            <h2 class="metric-value">{{ prediction.prediction }}</h2>
+            <span class="metric-subtext">P(Default) = {{ '%.2f'|format((prediction.default_probability or 0) * 100) }}%</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-icon-wrap bg-purple-light">
+            <i class="fa-solid fa-asterisk"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">SHAP Method</span>
+            <h2 class="metric-value">TreeSHAP</h2>
+            <span class="metric-subtext">Global consistency & fairness</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-icon-wrap bg-teal-light">
+            <i class="fa-solid fa-crosshairs"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">LIME Method</span>
+            <h2 class="metric-value">Submodular Pick</h2>
+            <span class="metric-subtext">Local surrogate fidelity</span>
+        </div>
+    </div>
+</div>
+
+<!-- Comparison Table -->
+<div class="recent-predictions-card">
+    <div class="card-header">
+        <h3><i class="fa-solid fa-table-columns"></i> Side-by-Side Feature Impact Breakdown</h3>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Applicant Value</th>
+                    <th>SHAP Direction</th>
+                    <th>LIME Direction</th>
+                    <th>SHAP Importance</th>
+                    <th>LIME Weight</th>
+                    <th style="text-align: center;">Agreement</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in comparison %}
+                <tr>
+                    <td><strong>{{ row.feature }}</strong></td>
+                    <td>{{ row.applicant_value }}</td>
+                    <td>
+                        <span class="status-pill {{ 'pill-danger' if 'Increases' in (row.shap_direction or '') else 'pill-success' }}">
+                            {{ row.shap_direction or 'Neutral' }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-pill {{ 'pill-danger' if 'Increases' in (row.lime_direction or '') else 'pill-success' }}">
+                            {{ row.lime_direction or 'Neutral' }}
+                        </span>
+                    </td>
+                    <td>
+                        <strong class="{{ 'text-danger' if (row.shap_value or 0) > 0 else 'text-success' }}">
+                            {{ '+' if (row.shap_value or 0) > 0 else '' }}{{ '%.4f'|format(row.shap_value or 0) }}
+                        </strong>
+                    </td>
+                    <td>
+                        <strong class="{{ 'text-danger' if (row.lime_weight or 0) > 0 else 'text-success' }}">
+                            {{ '+' if (row.lime_weight or 0) > 0 else '' }}{{ '%.4f'|format(row.lime_weight or 0) }}
+                        </strong>
+                    </td>
+                    <td style="text-align: center;">
+                        {% if row.agreement %}
+                        <span class="agreement-badge agreed"><i class="fa-solid fa-check"></i> Agreed</span>
+                        {% else %}
+                        <span class="agreement-badge divergent"><i class="fa-solid fa-triangle-exclamation"></i> Divergent</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="empty-state-cell">No comparison data available for this application.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="empty-state-card">
+    <i class="fa-solid fa-folder-open empty-icon"></i>
+    <h3>No assessments found for comparison</h3>
+    <a href="{{ url_for('user_assess') }}" class="btn-primary" style="margin-top: 1rem; display: inline-block;">Assess My Loan</a>
+</div>
+{% endif %}
+{% endblock %}

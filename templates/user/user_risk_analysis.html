@@ -1,0 +1,141 @@
+{% extends 'user/user_base.html' %}
+{% block title %}My Risk Analysis - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="user-page-header">
+    <div class="header-info">
+        <h1><i class="fa-solid fa-shield-halved"></i> Personal Risk Analysis & Trajectory</h1>
+        <p>Analyze how your loan parameters and credit standing influence default probabilities over time.</p>
+    </div>
+    <div class="header-action">
+        <div class="timeframe-selector">
+            <a href="{{ url_for('user_risk_analysis', period='all') }}" class="period-btn {% if current_period == 'all' %}active{% endif %}">All Time</a>
+            <a href="{{ url_for('user_risk_analysis', period='last_30_days') }}" class="period-btn {% if current_period == 'last_30_days' %}active{% endif %}">Last 30 Days</a>
+            <a href="{{ url_for('user_risk_analysis', period='last_6_months') }}" class="period-btn {% if current_period == 'last_6_months' %}active{% endif %}">Last 6 Months</a>
+            <a href="{{ url_for('user_risk_analysis', period='year_to_date') }}" class="period-btn {% if current_period == 'year_to_date' %}active{% endif %}">Year to Date</a>
+        </div>
+    </div>
+</div>
+
+<!-- Key Risk Metrics -->
+<div class="user-metrics-grid">
+    <div class="metric-card">
+        <div class="metric-icon-wrap bg-blue-light">
+            <i class="fa-solid fa-calculator"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Total Inquiries</span>
+            <h2 class="metric-value">{{ analytics.total_assessments }}</h2>
+            <span class="metric-subtext">Recorded applications</span>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon-wrap bg-purple-light">
+            <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Average Default Risk</span>
+            <h2 class="metric-value">{{ analytics.avg_default_probability }}%</h2>
+            <span class="metric-subtext">Across evaluated period</span>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon-wrap bg-teal-light">
+            <i class="fa-solid fa-gauge-high"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Credit Standing</span>
+            <h2 class="metric-value">{{ stats.credit_score }}</h2>
+            <span class="metric-subtext">{{ stats.credit_rating }}</span>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon-wrap {{ 'bg-green-light' if 'LOW' in stats.risk_category else ('bg-orange-light' if 'MEDIUM' in stats.risk_category else 'bg-red-light') }}">
+            <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Risk Tier</span>
+            <h2 class="metric-value"><span class="risk-badge {{ stats.risk_badge_class }}">{{ stats.risk_category }}</span></h2>
+            <span class="metric-subtext">{{ stats.risk_subtext }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="user-charts-row">
+    <!-- Probability Trajectory Chart -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3><i class="fa-solid fa-chart-line"></i> Probability of Default Over Time</h3>
+        </div>
+        <div class="chart-body">
+            <canvas id="userRiskTrendChart" height="240"></canvas>
+        </div>
+    </div>
+
+    <!-- Personal Risk Insights Card -->
+    <div class="chart-card chart-card-small">
+        <div class="chart-header">
+            <h3><i class="fa-solid fa-lightbulb"></i> Empirical Insights</h3>
+        </div>
+        <div class="insights-list" style="padding: 1rem 0;">
+            {% for ins in analytics.insights %}
+            <div class="insight-item">
+                <div class="insight-icon text-blue">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div class="insight-body">
+                    <p style="margin: 0; font-size: 0.95rem; line-height: 1.4;">{{ ins }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const trendLabels = {{ analytics.trend_labels | tojson }};
+const trendProbs = {{ analytics.trend_probs | tojson }};
+
+if (document.getElementById('userRiskTrendChart') && trendLabels.length > 0) {
+    const ctx = document.getElementById('userRiskTrendChart').getContext('2d');
+    const grad = ctx.createLinearGradient(0, 0, 0, 240);
+    grad.addColorStop(0, 'rgba(37, 99, 235, 0.3)');
+    grad.addColorStop(1, 'rgba(37, 99, 235, 0.02)');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: trendLabels,
+            datasets: [{
+                label: 'Default Risk (%)',
+                data: trendProbs,
+                borderColor: '#2563EB',
+                backgroundColor: grad,
+                borderWidth: 2.5,
+                fill: true,
+                tension: 0.35,
+                pointRadius: 5,
+                pointBackgroundColor: '#2563EB',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#F1F5F9' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

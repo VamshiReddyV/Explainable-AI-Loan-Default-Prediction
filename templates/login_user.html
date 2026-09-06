@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Login - LoanPredict AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+</head>
+<body class="auth-body">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo">
+                <i class="fa-solid fa-user-check"></i>
+            </div>
+            <h2>User Login</h2>
+            <p>Sign in with your registered email address or 10-digit mobile number.</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="auth-alerts">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                            <i class="fa-solid fa-circle-{{ 'exclamation' if category == 'error' else 'info' }}"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('login_user') }}" class="auth-form">
+            <div class="form-group">
+                <label for="identifier">Email Address or Mobile Number</label>
+                <div class="input-wrap">
+                    <i class="fa-regular fa-user"></i>
+                    <input type="text" name="identifier" id="identifier" value="{{ identifier or 'rahul@example.com' }}" placeholder="email@example.com or 9876543210" required autofocus>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-wrap">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" name="password" id="password" value="password123" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <div class="demo-credentials-box">
+                <div class="demo-cred-title"><i class="fa-solid fa-key"></i> Verified Demo User Accounts:</div>
+                <div class="demo-cred-line">
+                    <code>rahul@example.com</code> or <code>9812345678</code> &bull; <code>password123</code>
+                </div>
+                <div class="demo-cred-line">
+                    <code>priya@example.com</code> or <code>9823456789</code> &bull; <code>password123</code>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-portal btn-user" style="width: 100%; justify-content: center; margin-top: 0.75rem;">
+                <i class="fa-solid fa-right-to-bracket"></i> Login as User
+            </button>
+        </form>
+
+        <div class="auth-registration-prompt">
+            <span>New to LoanPredict AI?</span>
+            <a href="{{ url_for('register_user') }}" class="register-accent-link">Create an Account</a>
+        </div>
+
+        <div class="auth-footer">
+            <a href="{{ url_for('landing') }}" class="back-link">
+                <i class="fa-solid fa-arrow-left"></i> Home
+            </a>
+            <span class="divider-dot">&bull;</span>
+            <a href="{{ url_for('login_admin') }}" class="admin-link">
+                Admin Portal <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

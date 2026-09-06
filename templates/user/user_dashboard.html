@@ -1,0 +1,263 @@
+{% extends 'user/user_base.html' %}
+{% block title %}Dashboard - LoanPredict AI{% endblock %}
+
+{% block content %}
+<!-- Welcome Banner -->
+<div class="user-welcome-banner">
+    <div class="welcome-text">
+        <h1><i class="fa-solid fa-hand-wave"></i> Welcome back, {{ stats.user.name if stats.user else 'User' }}!</h1>
+        <p>Here's your latest loan risk assessment overview.</p>
+    </div>
+    <div class="welcome-date">
+        <i class="fa-regular fa-calendar"></i>
+        <span>{{ now }}</span>
+    </div>
+</div>
+
+<!-- Top Metric Cards Row -->
+<div class="user-metrics-grid">
+    <!-- Default Probability Card -->
+    <div class="metric-card metric-probability">
+        <div class="metric-icon-wrap bg-blue-light">
+            <i class="fa-solid fa-chart-pie"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Default Probability</span>
+            <h2 class="metric-value">{{ stats.probability_display }}</h2>
+            <span class="metric-change {{ 'change-down' if stats.prob_change_dir == 'down' else ('change-up' if stats.prob_change_dir == 'up' else 'change-neutral') }}">
+                {{ stats.prob_change_text }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Risk Category Card -->
+    <div class="metric-card metric-risk">
+        <div class="metric-icon-wrap {{ 'bg-green-light' if 'LOW' in stats.risk_category else ('bg-orange-light' if 'MEDIUM' in stats.risk_category else 'bg-red-light') }}">
+            <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Risk Category</span>
+            <h2 class="metric-value">
+                <span class="risk-badge {{ stats.risk_badge_class }}">{{ stats.risk_category }}</span>
+            </h2>
+            <span class="metric-subtext">{{ stats.risk_subtext if stats.risk_subtext else '' }}</span>
+        </div>
+    </div>
+
+    <!-- Credit Score Card -->
+    <div class="metric-card metric-credit">
+        <div class="metric-icon-wrap bg-purple-light">
+            <i class="fa-solid fa-gauge-high"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Credit Score</span>
+            <h2 class="metric-value">{{ stats.credit_score }}</h2>
+            <span class="metric-subtext">{{ stats.credit_rating }}</span>
+        </div>
+    </div>
+
+    <!-- Loan Amount Card -->
+    <div class="metric-card metric-loan">
+        <div class="metric-icon-wrap bg-teal-light">
+            <i class="fa-solid fa-indian-rupee-sign"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Latest Loan Amount</span>
+            <h2 class="metric-value">{{ stats.loan_amount_display }}</h2>
+            <span class="metric-subtext">Most recent application</span>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="user-charts-row">
+    <!-- Default Probability Trend Chart -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3><i class="fa-solid fa-chart-line"></i> Default Probability Trend</h3>
+        </div>
+        <div class="chart-body" style="position: relative; height: 220px; width: 100%;">
+            <canvas id="userProbTrendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Risk Overview Donut -->
+    <div class="chart-card chart-card-small">
+        <div class="chart-header">
+            <h3><i class="fa-solid fa-chart-pie"></i> Risk Overview</h3>
+        </div>
+        <div class="chart-body donut-wrap" style="position: relative; width: 100%; min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <div style="position: relative; height: 160px; width: 100%; max-width: 220px;">
+                <canvas id="userRiskDonut"></canvas>
+            </div>
+            <div class="donut-legend">
+                <div class="legend-item"><span class="dot dot-green"></span> Low {{ stats.risk_overview.low }}%</div>
+                <div class="legend-item"><span class="dot dot-orange"></span> Medium {{ stats.risk_overview.medium }}%</div>
+                <div class="legend-item"><span class="dot dot-red"></span> High {{ stats.risk_overview.high }}%</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Insights & Recommendations Row -->
+<div class="user-insights-row">
+    <!-- Key Insights -->
+    <div class="insights-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-lightbulb"></i> Key Insights</h3>
+        </div>
+        <div class="insights-list">
+            {% for insight in stats.key_insights %}
+            <div class="insight-item">
+                <div class="insight-icon {{ insight.color if insight.color else 'text-blue' }}">
+                    <i class="fa-solid {{ insight.icon }}"></i>
+                </div>
+                <div class="insight-body">
+                    <strong>{{ insight.title }}</strong>
+                    <p>{{ insight.text }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="recommendations-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-wand-magic-sparkles"></i> AI Recommendations</h3>
+        </div>
+        <ul class="rec-list">
+            {% for rec in stats.recommendations %}
+            <li><i class="fa-solid fa-check-circle"></i> {{ rec }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<!-- Recent Predictions Table -->
+<div class="recent-predictions-card">
+    <div class="card-header">
+        <h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Predictions</h3>
+        <a href="{{ url_for('user_predictions_page') }}" class="view-all-link">View All <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Loan Amount</th>
+                    <th>Credit Score</th>
+                    <th>Prediction</th>
+                    <th>Probability</th>
+                    <th>Risk Level</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in stats.recent_predictions %}
+                <tr>
+                    <td>{{ p.id }}</td>
+                    <td>{{ p.formatted_date }}</td>
+                    <td>₹{{ '{:,.0f}'.format(p.loan_amount or 0) }}</td>
+                    <td>{{ p.credit_score }}</td>
+                    <td>
+                        <span class="status-pill {{ 'pill-danger' if p.prediction == 'Default' else 'pill-success' }}">
+                            {{ p.prediction }}
+                        </span>
+                    </td>
+                    <td>{{ '%.2f'|format((p.default_probability or 0) * 100) }}%</td>
+                    <td>
+                        <span class="risk-badge {{ 'badge-danger' if 'High' in (p.risk_level or '') else ('badge-warning' if 'Medium' in (p.risk_level or '') else 'badge-success') }}">
+                            {{ p.risk_level }}
+                        </span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align:center; padding:2rem; color:#94A3B8;">
+                        <i class="fa-solid fa-inbox" style="font-size:2rem; margin-bottom:0.5rem; display:block;"></i>
+                        No predictions yet. Start your first loan assessment!
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// --- Default Probability Trend Line Chart ---
+const trendLabels = {{ stats.probability_trend.labels | tojson }};
+const trendData = {{ stats.probability_trend.probabilities | tojson }};
+
+if (document.getElementById('userProbTrendChart') && trendLabels.length > 0) {
+    const ctx1 = document.getElementById('userProbTrendChart').getContext('2d');
+    const gradient = ctx1.createLinearGradient(0, 0, 0, 220);
+    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.25)');
+    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.02)');
+
+    new Chart(ctx1, {
+        type: 'line',
+        data: {
+            labels: trendLabels,
+            datasets: [{
+                label: 'Default Probability (%)',
+                data: trendData,
+                borderColor: '#3B82F6',
+                backgroundColor: gradient,
+                borderWidth: 2.5,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#3B82F6',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#F1F5F9' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+
+// --- Risk Overview Donut Chart ---
+const riskOverview = {{ stats.risk_overview | tojson }};
+
+if (document.getElementById('userRiskDonut')) {
+    const lowCount = riskOverview.low_count || 0;
+    const medCount = riskOverview.med_count || 0;
+    const highCount = riskOverview.high_count || 0;
+    const totalCount = lowCount + medCount + highCount;
+
+    const donutData = totalCount > 0 ? [lowCount, medCount, highCount] : [1, 0, 0];
+    const donutColors = totalCount > 0 ? ['#10B981', '#F59E0B', '#EF4444'] : ['#CBD5E1', '#CBD5E1', '#CBD5E1'];
+
+    new Chart(document.getElementById('userRiskDonut').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+            datasets: [{
+                data: donutData,
+                backgroundColor: donutColors,
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '68%',
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+</script>
+{% endblock %}

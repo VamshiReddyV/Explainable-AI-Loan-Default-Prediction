@@ -1,0 +1,391 @@
+{% extends 'user/user_base.html' %}
+{% block title %}Apply for Loan - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="user-page-header">
+    <div class="header-info">
+        <h1><i class="fa-solid fa-file-circle-plus"></i> Loan Application Form</h1>
+        <p>Complete the application below. All fields marked with * are required. Documents must be PDF, JPG, or PNG (max 5MB each).</p>
+    </div>
+    <div class="header-action">
+        <a href="{{ url_for('user_assess') }}" class="btn-outline">
+            <i class="fa-solid fa-arrow-left"></i> Back to Assessment
+        </a>
+    </div>
+</div>
+
+<form method="POST" action="{{ url_for('user_apply_loan') }}" enctype="multipart/form-data" id="applicationForm">
+<div class="application-wizard">
+    <!-- Progress Indicator -->
+    <div class="wizard-progress">
+        <div class="wizard-step-indicator active" id="step1Ind">
+            <span class="step-num">1</span> Applicant Info
+        </div>
+        <div class="wizard-step-indicator" id="step2Ind">
+            <span class="step-num">2</span> Loan Details
+        </div>
+        <div class="wizard-step-indicator" id="step3Ind">
+            <span class="step-num">3</span> Documents
+        </div>
+        <div class="wizard-step-indicator" id="step4Ind">
+            <span class="step-num">4</span> Review & Submit
+        </div>
+    </div>
+
+    <div class="wizard-body">
+        <!-- Step 1: Applicant Information -->
+        <div class="wizard-section active" id="wizardStep1">
+            <div class="form-section-title">
+                <i class="fa-solid fa-id-card"></i> Applicant Information
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="full_name">Full Name *</label>
+                    <input type="text" name="full_name" id="full_name" value="{{ user.name if user else '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" name="email" id="email" value="{{ user.email if user else '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" name="phone" id="phone" value="{{ user.phone if user and user.phone else '' }}" placeholder="+91 XXXXX XXXXX">
+                </div>
+                <div class="form-group">
+                    <label for="apply_age">Age *</label>
+                    <input type="number" name="age" id="apply_age" value="{{ user.age if user and user.age else 30 }}" min="18" max="100" required>
+                </div>
+                <div class="form-group">
+                    <label for="apply_gender">Gender *</label>
+                    <select name="gender" id="apply_gender" required>
+                        <option value="Male" {% if user and user.gender == 'Male' %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if user and user.gender == 'Female' %}selected{% endif %}>Female</option>
+                    </select>
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label for="address">Full Address</label>
+                    <input type="text" name="address" id="address" value="{{ user.address if user and user.address else '' }}" placeholder="House/Flat No, Street, City, State, PIN">
+                </div>
+                <div class="form-group">
+                    <label for="apply_employment_type">Employment Type *</label>
+                    <select name="employment_type" id="apply_employment_type" required>
+                        <option value="Salaried" {% if user and user.employment_type == 'Salaried' %}selected{% endif %}>Salaried</option>
+                        <option value="Self-Employed" {% if user and user.employment_type == 'Self-Employed' %}selected{% endif %}>Self-Employed</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="employer_name">Employer / Business Name</label>
+                    <input type="text" name="employer_name" id="employer_name" placeholder="Company or business name">
+                </div>
+                <div class="form-group">
+                    <label for="apply_monthly_income">Monthly Income (₹) *</label>
+                    <input type="number" name="monthly_income" id="apply_monthly_income" value="{{ user.monthly_income if user and user.monthly_income else 50000 }}" min="5000" step="1000" required>
+                </div>
+                <div class="form-group">
+                    <label for="apply_credit_score">Credit Score *</label>
+                    <input type="number" name="credit_score" id="apply_credit_score" value="{{ user.credit_score if user and user.credit_score else 700 }}" min="300" max="850" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Loan Details -->
+        <div class="wizard-section" id="wizardStep2">
+            <div class="form-section-title">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Loan Details
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="apply_loan_type">Loan Type *</label>
+                    <select name="loan_type" id="apply_loan_type" required>
+                        <option value="Personal" {% if prefill.loan_type == 'Personal' %}selected{% endif %}>Personal Loan</option>
+                        <option value="Home" {% if prefill.loan_type == 'Home' %}selected{% endif %}>Home Loan</option>
+                        <option value="Land" {% if prefill.loan_type == 'Land' %}selected{% endif %}>Land Purchase</option>
+                        <option value="Business" {% if prefill.loan_type == 'Business' %}selected{% endif %}>Business Loan</option>
+                        <option value="Education" {% if prefill.loan_type == 'Education' %}selected{% endif %}>Education Loan</option>
+                        <option value="Vehicle" {% if prefill.loan_type == 'Vehicle' %}selected{% endif %}>Vehicle Loan</option>
+                        <option value="Agricultural" {% if prefill.loan_type == 'Agricultural' %}selected{% endif %}>Agricultural Loan</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="apply_loan_amount">Loan Amount (₹) *</label>
+                    <input type="number" name="loan_amount" id="apply_loan_amount" value="{{ prefill.loan_amount }}" min="10000" max="50000000" step="10000" required>
+                </div>
+                <div class="form-group">
+                    <label for="apply_loan_term">Loan Term (Months) *</label>
+                    <select name="loan_term" id="apply_loan_term" required>
+                        <option value="12" {% if prefill.loan_term|string == '12' %}selected{% endif %}>12 Months</option>
+                        <option value="24" {% if prefill.loan_term|string == '24' %}selected{% endif %}>24 Months</option>
+                        <option value="36" {% if prefill.loan_term|string == '36' %}selected{% endif %}>36 Months</option>
+                        <option value="48" {% if prefill.loan_term|string == '48' %}selected{% endif %}>48 Months</option>
+                        <option value="60" {% if prefill.loan_term|string == '60' %}selected{% endif %}>60 Months</option>
+                        <option value="120">120 Months</option>
+                        <option value="180">180 Months</option>
+                        <option value="240">240 Months</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="loan_purpose">Loan Purpose / Description</label>
+                    <input type="text" name="loan_purpose" id="loan_purpose" value="{{ prefill.loan_purpose }}" placeholder="Brief description of loan purpose">
+                </div>
+
+                <!-- Conditional fields based on loan type -->
+                <div class="form-group" id="fieldPropertyValue" style="display:none;">
+                    <label for="property_value">Property Value (₹)</label>
+                    <input type="number" name="property_value" id="property_value" min="0" step="10000" placeholder="Estimated property value">
+                </div>
+                <div class="form-group" id="fieldPropertyLocation" style="display:none;">
+                    <label for="property_location">Property Location</label>
+                    <input type="text" name="property_location" id="property_location" placeholder="City, area, or full address">
+                </div>
+                <div class="form-group" id="fieldVehicleModel" style="display:none;">
+                    <label for="vehicle_model">Vehicle Make & Model</label>
+                    <input type="text" name="vehicle_model" id="vehicle_model" placeholder="e.g., Maruti Swift VXi">
+                </div>
+                <div class="form-group" id="fieldInstitutionName" style="display:none;">
+                    <label for="institution_name">College / University Name</label>
+                    <input type="text" name="institution_name" id="institution_name" placeholder="Name of educational institution">
+                </div>
+                <div class="form-group" id="fieldBusinessName" style="display:none;">
+                    <label for="business_name">Business Name & Type</label>
+                    <input type="text" name="business_name" id="business_name" placeholder="Business name and nature">
+                </div>
+                <div class="form-group" id="fieldLandLocation" style="display:none;">
+                    <label for="land_location">Land Location & Survey No.</label>
+                    <input type="text" name="land_location" id="land_location" placeholder="Village, taluk, survey number">
+                </div>
+            </div>
+
+            <div class="form-section-title" style="margin-top: 2rem;">
+                <i class="fa-solid fa-user-shield"></i> Nominee & Bank Details
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="nominee_name">Nominee Name</label>
+                    <input type="text" name="nominee_name" id="nominee_name" placeholder="Full name of nominee">
+                </div>
+                <div class="form-group">
+                    <label for="nominee_relation">Nominee Relation</label>
+                    <select name="nominee_relation" id="nominee_relation">
+                        <option value="">Select...</option>
+                        <option value="Spouse">Spouse</option>
+                        <option value="Parent">Parent</option>
+                        <option value="Child">Child</option>
+                        <option value="Sibling">Sibling</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="bank_name">Bank Name</label>
+                    <input type="text" name="bank_name" id="bank_name" placeholder="Your primary bank">
+                </div>
+                <div class="form-group">
+                    <label for="account_number">Account Number</label>
+                    <input type="text" name="account_number" id="account_number" placeholder="Savings/current account number">
+                </div>
+                <div class="form-group">
+                    <label for="ifsc_code">IFSC Code</label>
+                    <input type="text" name="ifsc_code" id="ifsc_code" placeholder="e.g., SBIN0001234" maxlength="11">
+                </div>
+            </div>
+
+            {% if prefill.assessment_id %}
+            <input type="hidden" name="risk_assessment_id" value="{{ prefill.assessment_id }}">
+            {% endif %}
+        </div>
+
+        <!-- Step 3: Document Upload -->
+        <div class="wizard-section" id="wizardStep3">
+            <div class="form-section-title">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Document Upload
+            </div>
+            <p style="color: var(--user-text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">
+                Upload required supporting documents. Accepted formats: <strong>PDF, JPG, PNG</strong> (max 5MB each).
+            </p>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="doc_identity"><i class="fa-solid fa-id-badge"></i> Identity Proof (Aadhaar / PAN) *</label>
+                    <div class="file-input-group">
+                        <input type="file" name="doc_identity" id="doc_identity" accept=".pdf,.jpg,.jpeg,.png">
+                        <p class="file-hint">Aadhaar card, PAN card, Voter ID, or Passport</p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="doc_income"><i class="fa-solid fa-receipt"></i> Income Proof (Salary Slip / ITR) *</label>
+                    <div class="file-input-group">
+                        <input type="file" name="doc_income" id="doc_income" accept=".pdf,.jpg,.jpeg,.png">
+                        <p class="file-hint">Last 3 months salary slip or latest ITR</p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="doc_bank"><i class="fa-solid fa-building-columns"></i> Bank Statements (3-6 Months)</label>
+                    <div class="file-input-group">
+                        <input type="file" name="doc_bank" id="doc_bank" accept=".pdf,.jpg,.jpeg,.png">
+                        <p class="file-hint">Savings/current account last 3-6 months</p>
+                    </div>
+                </div>
+                <div class="form-group" id="docFieldProperty" style="display:none;">
+                    <label for="doc_property"><i class="fa-solid fa-house-circle-check"></i> Property / Land Documents</label>
+                    <div class="file-input-group">
+                        <input type="file" name="doc_property" id="doc_property" accept=".pdf,.jpg,.jpeg,.png">
+                        <p class="file-hint">Sale deed, title deed, or registration certificate</p>
+                    </div>
+                </div>
+                <div class="form-group" id="docFieldVehicle" style="display:none;">
+                    <label for="doc_vehicle"><i class="fa-solid fa-car-side"></i> Vehicle Quotation / Invoice</label>
+                    <div class="file-input-group">
+                        <input type="file" name="doc_vehicle" id="doc_vehicle" accept=".pdf,.jpg,.jpeg,.png">
+                        <p class="file-hint">Proforma invoice or dealer quotation</p>
+                    </div>
+                </div>
+                <div class="form-group" id="docFieldBusiness" style="display:none;">
+                    <label for="doc_business"><i class="fa-solid fa-building"></i> Business Registration / GST</label>
+                    <div class="file-input-group">
+                        <input type="file" name="doc_business" id="doc_business" accept=".pdf,.jpg,.jpeg,.png">
+                        <p class="file-hint">GST certificate, Udyam, or incorporation docs</p>
+                    </div>
+                </div>
+                <div class="form-group" id="docFieldEducation" style="display:none;">
+                    <label for="doc_education"><i class="fa-solid fa-school"></i> Admission Letter / Fee Structure</label>
+                    <div class="file-input-group">
+                        <input type="file" name="doc_education" id="doc_education" accept=".pdf,.jpg,.jpeg,.png">
+                        <p class="file-hint">Admission confirmation or fee receipt</p>
+                    </div>
+                </div>
+                <div class="form-group" id="docFieldAgri" style="display:none;">
+                    <label for="doc_agri"><i class="fa-solid fa-seedling"></i> Agricultural Land Passbook / RTC</label>
+                    <div class="file-input-group">
+                        <input type="file" name="doc_agri" id="doc_agri" accept=".pdf,.jpg,.jpeg,.png">
+                        <p class="file-hint">Land passbook, RTC, or patta</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Review & Submit -->
+        <div class="wizard-section" id="wizardStep4">
+            <div class="form-section-title">
+                <i class="fa-solid fa-clipboard-check"></i> Review & Declaration
+            </div>
+            <div class="app-detail-grid" id="reviewSummary" style="margin-bottom: 1.5rem;">
+                <!-- Populated by JavaScript -->
+            </div>
+
+            <div class="compliance-disclaimer" style="margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-shield-halved"></i>
+                <div>
+                    <strong>Declaration:</strong> I hereby declare that the information provided in this application is true and correct to the best of my knowledge. 
+                    I authorize LoanPredict AI to verify this information and share it with partnered financial institutions for the purpose of loan processing. 
+                    I understand that providing false or misleading information may result in rejection of my application.
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" id="agreeTerms" required style="width: 18px; height: 18px;">
+                    <span>I agree to the terms and conditions and declare the above information is accurate. *</span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wizard Navigation -->
+    <div class="wizard-nav">
+        <button type="button" class="btn-cancel" id="wizardPrev" style="display:none;">
+            <i class="fa-solid fa-arrow-left"></i> Previous
+        </button>
+        <div></div>
+        <button type="button" class="btn-primary" id="wizardNext">
+            Next <i class="fa-solid fa-arrow-right"></i>
+        </button>
+        <button type="submit" class="btn-primary btn-large" id="wizardSubmit" style="display:none;">
+            <i class="fa-solid fa-paper-plane"></i> Submit Application
+        </button>
+    </div>
+</div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    let currentStep = 1;
+    const totalSteps = 4;
+    const form = document.getElementById('applicationForm');
+    const prevBtn = document.getElementById('wizardPrev');
+    const nextBtn = document.getElementById('wizardNext');
+    const submitBtn = document.getElementById('wizardSubmit');
+
+    function showStep(step) {
+        for (let i = 1; i <= totalSteps; i++) {
+            document.getElementById('wizardStep' + i).classList.remove('active');
+            document.getElementById('step' + i + 'Ind').classList.remove('active', 'completed');
+        }
+        document.getElementById('wizardStep' + step).classList.add('active');
+        document.getElementById('step' + step + 'Ind').classList.add('active');
+
+        for (let i = 1; i < step; i++) {
+            document.getElementById('step' + i + 'Ind').classList.add('completed');
+        }
+
+        prevBtn.style.display = step > 1 ? '' : 'none';
+        nextBtn.style.display = step < totalSteps ? '' : 'none';
+        submitBtn.style.display = step === totalSteps ? '' : 'none';
+
+        if (step === totalSteps) populateReview();
+    }
+
+    prevBtn.addEventListener('click', () => { if (currentStep > 1) { currentStep--; showStep(currentStep); } });
+    nextBtn.addEventListener('click', () => { if (currentStep < totalSteps) { currentStep++; showStep(currentStep); } });
+
+    // Loan type conditional fields
+    const loanTypeSelect = document.getElementById('apply_loan_type');
+    function toggleLoanFields() {
+        const type = loanTypeSelect.value;
+        const map = {
+            'Home': ['fieldPropertyValue', 'fieldPropertyLocation', 'docFieldProperty'],
+            'Land': ['fieldPropertyValue', 'fieldPropertyLocation', 'docFieldProperty'],
+            'Vehicle': ['fieldVehicleModel', 'docFieldVehicle'],
+            'Education': ['fieldInstitutionName', 'docFieldEducation'],
+            'Business': ['fieldBusinessName', 'docFieldBusiness'],
+            'Agricultural': ['fieldLandLocation', 'docFieldAgri']
+        };
+        // Hide all conditional fields
+        document.querySelectorAll('[id^="field"], [id^="docField"]').forEach(el => { el.style.display = 'none'; });
+        // Show relevant
+        if (map[type]) {
+            map[type].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = '';
+            });
+        }
+    }
+    loanTypeSelect.addEventListener('change', toggleLoanFields);
+    toggleLoanFields();
+
+    function populateReview() {
+        const summary = document.getElementById('reviewSummary');
+        const getName = id => { const el = document.getElementById(id); return el ? (el.options ? el.options[el.selectedIndex].text : el.value) : '—'; };
+        summary.innerHTML = `
+            <div class="app-detail-section">
+                <h3><i class="fa-solid fa-user"></i> Applicant</h3>
+                <div class="detail-field"><span class="field-label">Name</span><span class="field-value">${getName('full_name')}</span></div>
+                <div class="detail-field"><span class="field-label">Email</span><span class="field-value">${getName('email')}</span></div>
+                <div class="detail-field"><span class="field-label">Phone</span><span class="field-value">${getName('phone') || '—'}</span></div>
+                <div class="detail-field"><span class="field-label">Employment</span><span class="field-value">${getName('apply_employment_type')}</span></div>
+                <div class="detail-field"><span class="field-label">Monthly Income</span><span class="field-value">₹${parseInt(getName('apply_monthly_income')).toLocaleString('en-IN')}</span></div>
+            </div>
+            <div class="app-detail-section">
+                <h3><i class="fa-solid fa-file-invoice-dollar"></i> Loan Details</h3>
+                <div class="detail-field"><span class="field-label">Type</span><span class="field-value">${getName('apply_loan_type')}</span></div>
+                <div class="detail-field"><span class="field-label">Amount</span><span class="field-value">₹${parseInt(getName('apply_loan_amount')).toLocaleString('en-IN')}</span></div>
+                <div class="detail-field"><span class="field-label">Term</span><span class="field-value">${getName('apply_loan_term')}</span></div>
+                <div class="detail-field"><span class="field-label">Purpose</span><span class="field-value">${getName('loan_purpose') || '—'}</span></div>
+                <div class="detail-field"><span class="field-label">Nominee</span><span class="field-value">${getName('nominee_name') || '—'}</span></div>
+            </div>
+        `;
+    }
+
+    showStep(1);
+})();
+</script>
+{% endblock %}

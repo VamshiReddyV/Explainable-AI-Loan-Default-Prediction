@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Mobile Number - LoanPredict AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+</head>
+<body class="auth-body">
+    <div class="auth-card otp-card">
+        <div class="auth-header">
+            <div class="auth-logo otp-logo">
+                <i class="fa-solid fa-mobile-screen-button"></i>
+            </div>
+            <h2>Verify Phone Number</h2>
+            <p>Please enter the 6-digit verification code sent to</p>
+            <div class="phone-badge">
+                <i class="fa-solid fa-phone"></i>
+                <span id="targetPhoneDisplay">{{ masked_phone }}</span>
+            </div>
+        </div>
+
+        <div id="dynamicAlert" style="display: none;" class="auth-alerts"></div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="auth-alerts">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                            <i class="fa-solid fa-circle-{{ 'exclamation' if category == 'error' else 'info' }}"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('verify_otp') }}" class="auth-form" id="otpForm">
+            <div class="form-group" style="text-align: center;">
+                <label for="otp" style="margin-bottom: 0.5rem; display: block;">6-Digit Security Code</label>
+                <div class="otp-input-container">
+                    <input type="text" 
+                           name="otp" 
+                           id="otp" 
+                           class="otp-digit-input" 
+                           maxlength="6" 
+                           inputmode="numeric" 
+                           pattern="[0-9]{6}" 
+                           placeholder="••••••" 
+                           autocomplete="one-time-code"
+                           required 
+                           autofocus>
+                </div>
+                <span class="field-hint">Code expires in 5 minutes. Standard SMS rates may apply.</span>
+            </div>
+
+            <button type="submit" class="btn-portal btn-user" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                <i class="fa-solid fa-shield-check"></i> Verify & Continue
+            </button>
+        </form>
+
+        <div class="resend-section">
+            <p class="resend-text">Didn't receive the code?</p>
+            <button type="button" id="btnResendOtp" class="btn-resend" {% if not can_resend %}disabled{% endif %}>
+                <i class="fa-solid fa-rotate-right"></i>
+                <span id="resendBtnText">
+                    {% if not can_resend %}
+                        Resend in <strong id="timerCount">{{ remaining_wait }}</strong>s
+                    {% else %}
+                        Resend Code via SMS
+                    {% endif %}
+                </span>
+            </button>
+        </div>
+
+        <div class="auth-footer">
+            <a href="{{ url_for('login_user') }}" class="back-link">
+                <i class="fa-solid fa-arrow-left"></i> Back to User Login
+            </a>
+            <span class="divider-dot">&bull;</span>
+            <a href="{{ url_for('landing') }}" class="back-link">
+                Home
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Cooldown timer handler
+        let remainingSeconds = parseInt("{{ remaining_wait }}", 10) || 0;
+        let timerInterval = null;
+        const btnResend = document.getElementById('btnResendOtp');
+        const resendBtnText = document.getElementById('resendBtnText');
+        const dynamicAlert = document.getElementById('dynamicAlert');
+
+        function startCountdown(seconds) {
+            remainingSeconds = seconds;
+            btnResend.disabled = true;
+            if (timerInterval) clearInterval(timerInterval);
+
+            timerInterval = setInterval(() => {
+                remainingSeconds--;
+                if (remainingSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    btnResend.disabled = false;
+                    resendBtnText.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Resend Code via SMS';
+                } else {
+                    resendBtnText.innerHTML = `Resend in <strong>${remainingSeconds}</strong>s`;
+                }
+            }, 1000);
+        }
+
+        if (remainingSeconds > 0) {
+            startCountdown(remainingSeconds);
+        }
+
+        btnResend.addEventListener('click', async () => {
+            if (btnResend.disabled) return;
+            btnResend.disabled = true;
+            resendBtnText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+
+            try {
+                const response = await fetch("{{ url_for('resend_otp_api') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ phone: "{{ phone }}" })
+                });
+
+                const data = await response.json();
+                dynamicAlert.style.display = 'block';
+
+                if (data.success) {
+                    let msg = data.message;
+                    if (data.dev_otp) {
+                        msg += ` (Dev Mode Code: <strong>${data.dev_otp}</strong>)`;
+                    }
+                    dynamicAlert.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>${msg}</span>
+                        </div>
+                    `;
+                    startCountdown(data.cooldown || 30);
+                } else {
+                    dynamicAlert.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                            <span>${data.message || 'Failed to resend code.'}</span>
+                        </div>
+                    `;
+                    if (data.remaining) {
+                        startCountdown(data.remaining);
+                    } else {
+                        btnResend.disabled = false;
+                        resendBtnText.innerHTML = 'Resend Code via SMS';
+                    }
+                }
+            } catch (err) {
+                dynamicAlert.style.display = 'block';
+                dynamicAlert.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span>Network error while requesting OTP resend. Please try again.</span>
+                    </div>
+                `;
+                btnResend.disabled = false;
+                resendBtnText.innerHTML = 'Resend Code via SMS';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+{% extends 'user/user_base.html' %}
+{% block title %}Assess My Loan - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="user-page-header">
+    <div class="header-info">
+        <h1><i class="fa-solid fa-calculator"></i> Assess My Loan Application</h1>
+        <p>Select your loan type and enter details below for real-time AI risk assessment with SHAP & LIME explainability.</p>
+    </div>
+    <div class="header-action">
+        <a href="{{ url_for('user_dashboard') }}" class="btn-outline">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Loan Type Tabs -->
+<div class="loan-type-tabs" id="loanTypeTabs">
+    <button type="button" class="loan-type-tab {% if selected_type == 'Personal' %}active{% endif %}" data-type="Personal">
+        <i class="fa-solid fa-user"></i> Personal Loan
+    </button>
+    <button type="button" class="loan-type-tab {% if selected_type == 'Home' %}active{% endif %}" data-type="Home">
+        <i class="fa-solid fa-house"></i> Home Loan
+    </button>
+    <button type="button" class="loan-type-tab {% if selected_type == 'Land' %}active{% endif %}" data-type="Land">
+        <i class="fa-solid fa-mountain-sun"></i> Land Loan
+    </button>
+    <button type="button" class="loan-type-tab {% if selected_type == 'Business' %}active{% endif %}" data-type="Business">
+        <i class="fa-solid fa-briefcase"></i> Business Loan
+    </button>
+    <button type="button" class="loan-type-tab {% if selected_type == 'Education' %}active{% endif %}" data-type="Education">
+        <i class="fa-solid fa-graduation-cap"></i> Education Loan
+    </button>
+    <button type="button" class="loan-type-tab {% if selected_type == 'Vehicle' %}active{% endif %}" data-type="Vehicle">
+        <i class="fa-solid fa-car"></i> Vehicle Loan
+    </button>
+    <button type="button" class="loan-type-tab {% if selected_type == 'Agricultural' %}active{% endif %}" data-type="Agricultural">
+        <i class="fa-solid fa-tractor"></i> Agricultural Loan
+    </button>
+</div>
+
+<div class="user-form-card">
+    <form method="POST" action="{{ url_for('user_assess') }}" class="loan-assess-form" id="assessForm">
+        <input type="hidden" name="loan_type" id="loanTypeInput" value="{{ selected_type or 'Personal' }}">
+
+        <div class="form-section-title">
+            <i class="fa-solid fa-user"></i> Personal & Financial Profile
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="age">Age</label>
+                <input type="number" name="age" id="age" value="{{ user.age if user and user.age else 30 }}" min="18" max="100" required>
+            </div>
+            <div class="form-group">
+                <label for="gender">Gender</label>
+                <select name="gender" id="gender" required>
+                    <option value="Male" {% if user and user.gender == 'Male' %}selected{% endif %}>Male</option>
+                    <option value="Female" {% if user and user.gender == 'Female' %}selected{% endif %}>Female</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="marital_status">Marital Status</label>
+                <select name="marital_status" id="marital_status" required>
+                    <option value="Single" {% if user and user.marital_status == 'Single' %}selected{% endif %}>Single</option>
+                    <option value="Married" {% if user and user.marital_status == 'Married' %}selected{% endif %}>Married</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="number_of_dependents">Number of Dependents</label>
+                <input type="number" name="number_of_dependents" id="number_of_dependents" value="{{ user.number_of_dependents if user and user.number_of_dependents is not none else 0 }}" min="0" max="10" required>
+            </div>
+            <div class="form-group">
+                <label for="employment_type">Employment Type</label>
+                <select name="employment_type" id="employment_type" required>
+                    <option value="Salaried" {% if user and user.employment_type == 'Salaried' %}selected{% endif %}>Salaried</option>
+                    <option value="Self-Employed" {% if user and user.employment_type == 'Self-Employed' %}selected{% endif %}>Self-Employed</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="employment_experience">Experience (Years)</label>
+                <input type="number" name="employment_experience" id="employment_experience" value="{{ user.employment_experience if user and user.employment_experience else 3 }}" min="0" max="50" required>
+            </div>
+            <div class="form-group">
+                <label for="monthly_income">Monthly Income (₹)</label>
+                <input type="number" name="monthly_income" id="monthly_income" value="{{ user.monthly_income if user and user.monthly_income else 55000 }}" min="5000" step="1000" required>
+            </div>
+            <div class="form-group">
+                <label for="credit_score">Credit Score (300 - 850)</label>
+                <input type="number" name="credit_score" id="credit_score" value="{{ user.credit_score if user and user.credit_score else 720 }}" min="300" max="850" required>
+            </div>
+        </div>
+
+        <div class="form-section-title" style="margin-top: 2rem;">
+            <i class="fa-solid fa-file-invoice-dollar"></i> Loan Parameters
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="loan_amount">Loan Amount (₹)</label>
+                <input type="number" name="loan_amount" id="loan_amount" value="350000" min="10000" max="50000000" step="10000" required>
+            </div>
+            <div class="form-group">
+                <label for="loan_term">Loan Term (Months)</label>
+                <select name="loan_term" id="loan_term" required>
+                    <option value="12">12 Months (1 Year)</option>
+                    <option value="24">24 Months (2 Years)</option>
+                    <option value="36" selected>36 Months (3 Years)</option>
+                    <option value="48">48 Months (4 Years)</option>
+                    <option value="60">60 Months (5 Years)</option>
+                    <option value="120">120 Months (10 Years)</option>
+                    <option value="180">180 Months (15 Years)</option>
+                    <option value="240">240 Months (20 Years)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="interest_rate">Estimated Interest Rate (% p.a.)</label>
+                <input type="number" name="interest_rate" id="interest_rate" value="10.5" min="1" max="36" step="0.1" required>
+            </div>
+            <div class="form-group">
+                <label for="existing_loans">Existing Active Loans</label>
+                <input type="number" name="existing_loans" id="existing_loans" value="{{ user.existing_loans if user and user.existing_loans is not none else 0 }}" min="0" max="10" required>
+            </div>
+        </div>
+
+        <div class="form-actions" style="margin-top: 2rem;">
+            <button type="submit" class="btn-primary btn-large">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Calculate Default Risk & Explain
+            </button>
+            <a href="{{ url_for('user_dashboard') }}" class="btn-cancel">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<!-- Assessment Result (only shown after POST) -->
+{% if result %}
+<div class="assessment-result-card" id="assessmentResult">
+    <div class="result-header">
+        <h2><i class="fa-solid fa-chart-bar"></i> Assessment Results — {{ result.loan_type }} Loan</h2>
+        <span class="risk-badge {{ 'badge-danger' if 'High' in result.risk_tier else ('badge-warning' if 'Medium' in result.risk_tier else 'badge-success') }}">
+            {{ result.risk_tier }}
+        </span>
+    </div>
+
+    <!-- Eligibility Banner -->
+    <div class="eligibility-banner {{ result.eligibility_class }}">
+        <div class="eligibility-icon">
+            {% if 'success' in result.eligibility_class %}
+                <i class="fa-solid fa-circle-check"></i>
+            {% elif 'warning' in result.eligibility_class %}
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            {% else %}
+                <i class="fa-solid fa-circle-xmark"></i>
+            {% endif %}
+        </div>
+        <div class="eligibility-text">
+            <strong>{{ result.eligibility_status }}</strong>
+            <span>{{ result.eligibility_sub }}</span>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="result-metrics-grid">
+        <div class="result-metric-box">
+            <div class="metric-label">Default Probability</div>
+            <div class="metric-value">{{ result.probability }}%</div>
+        </div>
+        <div class="result-metric-box">
+            <div class="metric-label">Loan Amount</div>
+            <div class="metric-value">₹{{ '{:,.0f}'.format(result.loan_amount) }}</div>
+        </div>
+        <div class="result-metric-box">
+            <div class="metric-label">Loan Term</div>
+            <div class="metric-value">{{ result.loan_term }} mo</div>
+        </div>
+        <div class="result-metric-box">
+            <div class="metric-label">Interest Rate</div>
+            <div class="metric-value">{{ result.interest_rate }}%</div>
+        </div>
+        <div class="result-metric-box">
+            <div class="metric-label">Credit Score</div>
+            <div class="metric-value">{{ result.credit_score }}</div>
+        </div>
+    </div>
+
+    <!-- SHAP Explanation -->
+    {% if result.shap_features %}
+    <div class="xai-section">
+        <h4><i class="fa-solid fa-asterisk"></i> SHAP Feature Contributions</h4>
+        <div class="xai-bar-list">
+            {% for f in result.shap_features %}
+            <div class="xai-bar-item">
+                <span class="feature-name">{{ f.name if f.name is string else f.get('display_name', f.get('name', 'Feature')) }}</span>
+                <div class="bar-wrap">
+                    {% set abs_val = (f.value if f.value is number else f.get('shap_value', 0))|abs %}
+                    {% set direction = 'positive' if (f.value if f.value is number else f.get('shap_value', 0)) > 0 else 'negative' %}
+                    <div class="bar-fill {{ direction }}" style="width: {{ [abs_val * 400, 100] | min }}%"></div>
+                </div>
+                <span class="bar-value">{{ '{:+.4f}'.format(f.value if f.value is number else f.get('shap_value', 0)) }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- LIME Explanation -->
+    {% if result.lime_features %}
+    <div class="xai-section">
+        <h4><i class="fa-solid fa-crosshairs"></i> LIME Local Explanation</h4>
+        <div class="xai-bar-list">
+            {% for f in result.lime_features %}
+            <div class="xai-bar-item">
+                <span class="feature-name">{{ f.feature if f.feature is string else f.get('display_name', f.get('feature', 'Feature')) }}</span>
+                <div class="bar-wrap">
+                    {% set lv = (f.weight if f.weight is number else f.get('weight', 0)) %}
+                    {% set abs_lv = lv|abs %}
+                    {% set ld = 'positive' if lv > 0 else 'negative' %}
+                    <div class="bar-fill {{ ld }}" style="width: {{ [abs_lv * 400, 100] | min }}%"></div>
+                </div>
+                <span class="bar-value">{{ '{:+.4f}'.format(f.weight if f.weight is number else f.get('weight', 0)) }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Improvement Suggestions -->
+    {% if result.suggestions %}
+    <div class="xai-section">
+        <h4><i class="fa-solid fa-lightbulb"></i> AI Recommendations to Improve Approval Odds</h4>
+        <ul class="suggestions-list">
+            {% for s in result.suggestions %}
+            <li><i class="fa-solid fa-arrow-trend-up"></i> {{ s }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Compliance Disclaimer -->
+    <div class="compliance-disclaimer">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <div>
+            <strong>Important Compliance Disclaimer:</strong> This assessment is generated by an AI model for informational purposes only. 
+            It does not constitute a formal loan approval or financial advice. Final lending decisions are made by authorized financial institutions 
+            based on their own underwriting criteria, regulatory requirements, and independent verification of applicant data.
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="result-actions">
+        <a href="{{ url_for('user_apply_loan', type=result.loan_type, amount=result.loan_amount|int, term=result.loan_term, assessment_id=result.id) }}" class="btn-primary">
+            <i class="fa-solid fa-file-circle-plus"></i> Proceed to Apply
+        </a>
+        <a href="{{ url_for('user_shap_page', id=result.id) }}" class="btn-outline">
+            <i class="fa-solid fa-asterisk"></i> Full SHAP Analysis
+        </a>
+        <a href="{{ url_for('user_lime_page', id=result.id) }}" class="btn-outline">
+            <i class="fa-solid fa-crosshairs"></i> Full LIME Analysis
+        </a>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Loan Type Tab Switching
+document.querySelectorAll('.loan-type-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.loan-type-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById('loanTypeInput').value = this.dataset.type;
+    });
+});
+
+// Scroll to result if present
+{% if result %}
+document.addEventListener('DOMContentLoaded', function() {
+    var el = document.getElementById('assessmentResult');
+    if (el) {
+        setTimeout(function() {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

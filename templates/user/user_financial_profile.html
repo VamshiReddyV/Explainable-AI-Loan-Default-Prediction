@@ -1,0 +1,115 @@
+{% extends 'user/user_base.html' %}
+{% block title %}Financial Profile - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="user-page-header">
+    <div class="header-info">
+        <h1><i class="fa-solid fa-wallet"></i> My Financial Profile</h1>
+        <p>Maintain your verified borrower profile to receive tailored risk assessments and pre-calculated default probabilities.</p>
+    </div>
+</div>
+
+<div class="user-form-card">
+    <form method="POST" action="{{ url_for('user_financial_profile') }}" class="loan-assess-form">
+        <div class="form-section-title">
+            <i class="fa-solid fa-id-card"></i> Demographics & Employment
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="age">Age</label>
+                <input type="number" name="age" id="age" value="{{ user.age if user and user.age else 30 }}" required>
+            </div>
+            <div class="form-group">
+                <label for="gender">Gender</label>
+                <select name="gender" id="gender">
+                    <option value="Male" {% if user and user.gender == 'Male' %}selected{% endif %}>Male</option>
+                    <option value="Female" {% if user and user.gender == 'Female' %}selected{% endif %}>Female</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="marital_status">Marital Status</label>
+                <select name="marital_status" id="marital_status">
+                    <option value="Single" {% if user and user.marital_status == 'Single' %}selected{% endif %}>Single</option>
+                    <option value="Married" {% if user and user.marital_status == 'Married' %}selected{% endif %}>Married</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="number_of_dependents">Dependents</label>
+                <input type="number" name="number_of_dependents" id="number_of_dependents" value="{{ user.number_of_dependents if user and user.number_of_dependents is not none else 0 }}" required>
+            </div>
+            <div class="form-group">
+                <label for="employment_type">Employment Status</label>
+                <select name="employment_type" id="employment_type">
+                    <option value="Salaried" {% if user and user.employment_type == 'Salaried' %}selected{% endif %}>Salaried Employee</option>
+                    <option value="Self-Employed" {% if user and user.employment_type == 'Self-Employed' %}selected{% endif %}>Self-Employed / Business Owner</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="employment_experience">Experience (Years)</label>
+                <input type="number" name="employment_experience" id="employment_experience" value="{{ user.employment_experience if user and user.employment_experience else 3 }}" required>
+            </div>
+        </div>
+
+        <div class="form-section-title" style="margin-top: 2rem;">
+            <i class="fa-solid fa-coins"></i> Income & Credit Baseline
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="monthly_income">Monthly Net Income (₹)</label>
+                <input type="number" name="monthly_income" id="monthly_income" value="{{ user.monthly_income if user and user.monthly_income else 50000 }}" required>
+            </div>
+            <div class="form-group">
+                <label for="credit_score">Verified Credit Score</label>
+                <input type="number" name="credit_score" id="credit_score" value="{{ user.credit_score if user and user.credit_score else 720 }}" min="300" max="850" required>
+            </div>
+            <div class="form-group">
+                <label for="existing_loans">Active Outstanding Loans</label>
+                <input type="number" name="existing_loans" id="existing_loans" value="{{ user.existing_loans if user and user.existing_loans is not none else 0 }}" required>
+            </div>
+        </div>
+
+        <div class="form-section-title" style="margin-top: 2rem;">
+            <i class="fa-solid fa-scale-balanced"></i> Extended Financial Details
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="monthly_expenses">Monthly Expenses (₹)</label>
+                <input type="number" name="monthly_expenses" id="monthly_expenses" value="{{ user.monthly_expenses if user and user.monthly_expenses else 0 }}" min="0" step="500" placeholder="Total monthly expenditure">
+            </div>
+            <div class="form-group">
+                <label for="existing_emi">Existing EMI Obligations (₹/month)</label>
+                <input type="number" name="existing_emi" id="existing_emi" value="{{ user.existing_emi if user and user.existing_emi else 0 }}" min="0" step="500" placeholder="Current total EMI payments">
+            </div>
+            <div class="form-group">
+                <label for="assets_value">Total Assets Value (₹)</label>
+                <input type="number" name="assets_value" id="assets_value" value="{{ user.assets_value if user and user.assets_value else 0 }}" min="0" step="10000" placeholder="Property, investments, savings">
+            </div>
+            <div class="form-group">
+                <label for="liabilities_value">Total Liabilities (₹)</label>
+                <input type="number" name="liabilities_value" id="liabilities_value" value="{{ user.liabilities_value if user and user.liabilities_value else 0 }}" min="0" step="10000" placeholder="Outstanding debts and obligations">
+            </div>
+        </div>
+
+        <div class="form-section-title" style="margin-top: 2rem;">
+            <i class="fa-solid fa-address-card"></i> Identity & Contact
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="pan_number">PAN Number</label>
+                <input type="text" name="pan_number" id="pan_number" value="{{ user.pan_number if user and user.pan_number else '' }}" placeholder="AAAPL1234C" maxlength="10" style="text-transform: uppercase;">
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+                <label for="address">Residential Address</label>
+                <input type="text" name="address" id="address" value="{{ user.address if user and user.address else '' }}" placeholder="House No, Street, City, State, PIN Code">
+            </div>
+        </div>
+
+        <div class="form-actions" style="margin-top: 2rem;">
+            <button type="submit" class="btn-primary">
+                <i class="fa-solid fa-floppy-disk"></i> Save Financial Profile
+            </button>
+            <a href="{{ url_for('user_dashboard') }}" class="btn-cancel">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

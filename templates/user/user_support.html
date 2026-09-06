@@ -1,0 +1,258 @@
+{% extends 'user/user_base.html' %}
+{% block title %}Help & Support - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="user-page-header">
+    <div class="header-info">
+        <h1><i class="fa-regular fa-circle-question"></i> Help & Borrower Knowledge Base</h1>
+        <p>Comprehensive guide to algorithmic credit evaluation, Explainable AI disclosures, and borrowing best practices.</p>
+    </div>
+    <div class="header-action">
+        <span class="badge-success" style="padding: 0.5rem 1rem; border-radius: 50px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-circle text-success" style="font-size: 0.5rem;"></i> ML Inference System: Operational
+        </span>
+    </div>
+</div>
+
+<!-- Search & Category Filters -->
+<div class="recent-predictions-card" style="margin-bottom: 2rem; padding: 1.5rem 2rem;">
+    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <div style="position: relative; flex: 1; min-width: 260px;">
+            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94A3B8;"></i>
+            <input type="text" id="faqSearchInput" class="form-control" placeholder="Search questions (e.g., SHAP, credit score, interest rate, high risk)..." style="padding-left: 44px;">
+        </div>
+        <div class="timeframe-selector" style="margin: 0;">
+            <button type="button" class="period-btn active" onclick="filterFaq('all', this)">All Topics</button>
+            <button type="button" class="period-btn" onclick="filterFaq('xai', this)">Explainability (XAI)</button>
+            <button type="button" class="period-btn" onclick="filterFaq('risk', this)">Credit & Risk</button>
+            <button type="button" class="period-btn" onclick="filterFaq('loans', this)">Loan Assessment</button>
+        </div>
+    </div>
+</div>
+
+<!-- FAQ Accordion List -->
+<div class="faq-accordion-container" id="faqAccordion">
+    <!-- Item 1: SHAP -->
+    <div class="faq-item active" data-category="xai">
+        <div class="faq-question" onclick="toggleFaq(this)">
+            <span><i class="fa-solid fa-asterisk text-blue" style="margin-right: 0.75rem;"></i> What is SHAP and how does it explain my default prediction?</span>
+            <i class="fa-solid fa-chevron-down chevron-icon"></i>
+        </div>
+        <div class="faq-answer">
+            <p>
+                <strong>SHAP (SHapley Additive exPlanations)</strong> is an advanced framework rooted in cooperative game theory. 
+                Instead of treating the AI model as a "black box," SHAP quantifies the exact contribution of each individual feature 
+                (such as your Credit Score, Monthly Income, or Loan Term) to moving your predicted default risk above or below the baseline population average (35.0%).
+            </p>
+            <p style="margin-top: 0.5rem;">
+                Positive SHAP values indicate factors that increased your risk score, while negative SHAP values represent positive protective factors that helped reduce your risk.
+            </p>
+        </div>
+    </div>
+
+    <!-- Item 2: LIME -->
+    <div class="faq-item" data-category="xai">
+        <div class="faq-question" onclick="toggleFaq(this)">
+            <span><i class="fa-solid fa-crosshairs text-purple" style="margin-right: 0.75rem;"></i> What is LIME and how does it differ from SHAP?</span>
+            <i class="fa-solid fa-chevron-down chevron-icon"></i>
+        </div>
+        <div class="faq-answer">
+            <p>
+                <strong>LIME (Local Interpretable Model-agnostic Explanations)</strong> analyzes your specific application by generating 
+                small perturbations (slight variations) around your financial parameters to create an interpretable linear surrogate model.
+            </p>
+            <p style="margin-top: 0.5rem;">
+                While SHAP provides global consistency and exact mathematical attribution across all feature interactions, LIME provides 
+                intuitive, localized "if-then" decision boundaries showing what conditions directly influenced your individual decision.
+            </p>
+        </div>
+    </div>
+
+    <!-- Item 3: Default Risk -->
+    <div class="faq-item" data-category="risk">
+        <div class="faq-question" onclick="toggleFaq(this)">
+            <span><i class="fa-solid fa-shield-halved text-green" style="margin-right: 0.75rem;"></i> How are Default Probability and Risk Tiers calibrated?</span>
+            <i class="fa-solid fa-chevron-down chevron-icon"></i>
+        </div>
+        <div class="faq-answer">
+            <p>
+                Our machine learning ensemble outputs a continuous calibrated probability from 0.0% to 100.0%. The scores are mapped into three standardized banking tiers:
+            </p>
+            <ul style="margin: 0.5rem 0 0.5rem 1.5rem; line-height: 1.6;">
+                <li><strong>Low Risk (0% – 30%):</strong> High eligibility. Standard prime underwriting approval with preferential interest rates.</li>
+                <li><strong>Medium Risk (30% – 60%):</strong> Moderate risk. Approved subject to income verification, collateral, or co-signer evaluation.</li>
+                <li><strong>High Risk (60% – 100%):</strong> Elevated default likelihood. Recommendations are provided to optimize debt burden before formal institutional submission.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Item 4: Lowering Risk -->
+    <div class="faq-item" data-category="risk">
+        <div class="faq-question" onclick="toggleFaq(this)">
+            <span><i class="fa-solid fa-arrow-trend-down text-blue" style="margin-right: 0.75rem;"></i> How can I quickly lower my predicted default risk?</span>
+            <i class="fa-solid fa-chevron-down chevron-icon"></i>
+        </div>
+        <div class="faq-answer">
+            <p>
+                Based on our SHAP sensitivity analysis across thousands of evaluated loans, the three most impactful adjustments are:
+            </p>
+            <ol style="margin: 0.5rem 0 0.5rem 1.5rem; line-height: 1.6;">
+                <li><strong>Increase Loan Term:</strong> Moving from a 24-month to a 36- or 48-month term lowers monthly EMI obligation, significantly boosting debt-to-income affordability.</li>
+                <li><strong>Moderate Requested Loan Amount:</strong> Keeping the principal within 4–5x your verified monthly salary substantially reduces the model's loss-given-default penalty.</li>
+                <li><strong>Consolidate Existing Open Loans:</strong> Applicants with 0 or 1 active loans receive strong positive SHAP protective credits compared to those with 3+ active loans.</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Item 5: Assessing multiple loans -->
+    <div class="faq-item" data-category="loans">
+        <div class="faq-question" onclick="toggleFaq(this)">
+            <span><i class="fa-solid fa-calculator text-teal" style="margin-right: 0.75rem;"></i> Does running multiple assessments hurt my official credit score?</span>
+            <i class="fa-solid fa-chevron-down chevron-icon"></i>
+        </div>
+        <div class="faq-answer">
+            <p>
+                <strong>No. Absolutely not.</strong> Assessments conducted on LoanPredict AI are "soft evaluations" executed entirely within our private sandbox inference engine. 
+                They are never reported as hard inquiries to credit bureaus and have zero adverse impact on your CIBIL, Experian, or Equifax credit standing.
+            </p>
+        </div>
+    </div>
+
+    <!-- Item 6: Reports & Exporting -->
+    <div class="faq-item" data-category="loans">
+        <div class="faq-question" onclick="toggleFaq(this)">
+            <span><i class="fa-solid fa-file-pdf text-danger" style="margin-right: 0.75rem;"></i> How do I present my XAI Explanation report to a lending bank?</span>
+            <i class="fa-solid fa-chevron-down chevron-icon"></i>
+        </div>
+        <div class="faq-answer">
+            <p>
+                Navigate to your <strong>My Predictions</strong> tab, click on any completed assessment, and select <strong>Export PDF Report</strong>. 
+                The exported document contains a certified Explainable AI audit sheet featuring both SHAP factor values and LIME weights, 
+                providing empirical evidence of repayment capability to bank credit underwriters.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Support Contact & Direct Human Review Box -->
+<div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 2rem; margin-top: 2.5rem;">
+    <!-- Human Assistance Card -->
+    <div class="recent-predictions-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-headset text-blue"></i> Need Help from a Loan Specialist?</h3>
+        </div>
+        <div style="padding: 1.5rem 2rem;">
+            <p style="color: #475569; font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.5;">
+                Have questions regarding algorithmic disclosures, underwriting exceptions, or customized debt consolidation? 
+                Our certified credit advisory team is available to assist you.
+            </p>
+            <form id="supportTicketForm" onsubmit="handleSupportSubmit(event)">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label style="font-weight: 600; font-size: 0.88rem; color: #1E293B; margin-bottom: 0.35rem; display: block;">Subject</label>
+                    <input type="text" class="form-control" required placeholder="e.g., Explanation regarding SHAP Credit Score weighting" id="ticketSubject">
+                </div>
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label style="font-weight: 600; font-size: 0.88rem; color: #1E293B; margin-bottom: 0.35rem; display: block;">Message</label>
+                    <textarea class="form-control" rows="3" required placeholder="Describe your question or specific loan inquiry ID..." id="ticketMessage"></textarea>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
+                    <i class="fa-solid fa-paper-plane"></i> Send Message to Specialist
+                </button>
+            </form>
+            <div id="supportFeedback" style="display: none; margin-top: 1rem; padding: 0.75rem 1rem; background: #DCFCE7; color: #166534; border-radius: 8px; font-size: 0.9rem; font-weight: 600;">
+                <i class="fa-solid fa-circle-check"></i> Thank you! Your support request has been logged. An advisor will review your assessment within 2 business hours.
+            </div>
+        </div>
+    </div>
+
+    <!-- Platform Verification & Guarantee Card -->
+    <div class="recent-predictions-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-certificate text-purple"></i> Institutional Assurance</h3>
+        </div>
+        <div style="padding: 1.5rem 2rem; display: flex; flex-direction: column; gap: 1.25rem;">
+            <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                <i class="fa-solid fa-scale-unbalanced-flip text-blue" style="font-size: 1.25rem; margin-top: 0.2rem;"></i>
+                <div>
+                    <strong style="color: var(--user-navy); font-size: 0.95rem;">Model Fairness & Parity Certified</strong>
+                    <p style="margin: 0.2rem 0 0 0; color: #64748B; font-size: 0.85rem; line-height: 1.45;">
+                        Equalized odds and demographic parity verified to ensure unbiased evaluation across all applicant backgrounds.
+                    </p>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                <i class="fa-solid fa-shield-halved text-green" style="font-size: 1.25rem; margin-top: 0.2rem;"></i>
+                <div>
+                    <strong style="color: var(--user-navy); font-size: 0.95rem;">256-Bit Bank Grade Encryption</strong>
+                    <p style="margin: 0.2rem 0 0 0; color: #64748B; font-size: 0.85rem; line-height: 1.45;">
+                        Applicant records and financial profile attributes are secured in an isolated user-partitioned database environment.
+                    </p>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                <i class="fa-solid fa-headset text-teal" style="font-size: 1.25rem; margin-top: 0.2rem;"></i>
+                <div>
+                    <strong style="color: var(--user-navy); font-size: 0.95rem;">Direct Contact Channels</strong>
+                    <p style="margin: 0.2rem 0 0 0; color: #64748B; font-size: 0.85rem; line-height: 1.45;">
+                        Email: <strong>support@loanpredict.ai</strong><br>
+                        Toll-Free Assistance: <strong>1800-LOAN-AI (9 AM – 7 PM IST)</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Accordion Toggle
+function toggleFaq(headerEl) {
+    const item = headerEl.parentElement;
+    item.classList.toggle('active');
+}
+
+// Category Filter
+function filterFaq(category, btn) {
+    document.querySelectorAll('.timeframe-selector .period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const items = document.querySelectorAll('.faq-item');
+    items.forEach(item => {
+        if (category === 'all' || item.getAttribute('data-category') === category) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// Search Filter
+document.getElementById('faqSearchInput').addEventListener('input', function(e) {
+    const q = e.target.value.toLowerCase().trim();
+    const items = document.querySelectorAll('.faq-item');
+    items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        if (text.includes(q)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
+
+// Support Ticket Handler
+function handleSupportSubmit(e) {
+    e.preventDefault();
+    document.getElementById('ticketSubject').value = '';
+    document.getElementById('ticketMessage').value = '';
+    const fb = document.getElementById('supportFeedback');
+    fb.style.display = 'block';
+    setTimeout(() => {
+        fb.style.display = 'none';
+    }, 6000);
+}
+</script>
+{% endblock %}

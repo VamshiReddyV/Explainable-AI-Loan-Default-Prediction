@@ -6,19 +6,46 @@
 <!-- Top Header -->
 <div class="dashboard-header">
     <div class="welcome-section">
-        <h1>Welcome back, Admin 👋</h1>
-        <p>Here's what's happening with your loan prediction system today.</p>
+        <h1 id="dashboardWelcomeMsg">Welcome back, {{ admin_profile.display_name }}! 👋</h1>
+        <p>Real-time machine learning inference, empirical performance audit, and explainability analytics.</p>
     </div>
     <div class="header-actions">
         <div class="date-display">
             <i class="fa-regular fa-calendar"></i>
             <span>{{ now }}</span>
         </div>
-        <div class="user-profile">
-            <div class="avatar"><i class="fa-solid fa-user"></i></div>
-            <div class="user-info">
-                <span class="user-name">Admin User</span>
-                <span class="user-role">Administrator <i class="fa-solid fa-chevron-down"></i></span>
+        
+        <!-- Interactive Admin Profile Dropdown -->
+        <div class="user-profile-dropdown" id="userProfileDropdown">
+            <div class="user-profile" id="userProfileTrigger" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false" title="Click to view administrator options">
+                <div class="avatar"><i class="fa-solid fa-user-shield"></i></div>
+                <div class="user-info">
+                    <span class="user-name" id="topNavAdminName">{{ admin_profile.display_name }}</span>
+                    <span class="user-role" id="topNavAdminRole">{{ admin_profile.role }} <i class="fa-solid fa-chevron-down"></i></span>
+                </div>
+            </div>
+            <div class="dropdown-menu" id="profileDropdownMenu">
+                <div class="dropdown-header">
+                    <div class="dropdown-avatar"><i class="fa-solid fa-user-gear"></i></div>
+                    <div>
+                        <strong id="dropdownFullName">{{ admin_profile.full_name }}</strong>
+                        <span id="dropdownEmail">{{ admin_profile.email }}</span>
+                    </div>
+                </div>
+                <div class="dropdown-divider"></div>
+                <a href="{{ url_for('profile') }}" class="dropdown-item">
+                    <i class="fa-regular fa-id-badge"></i> Administrator Profile
+                </a>
+                <a href="{{ url_for('profile') }}#edit-form" class="dropdown-item">
+                    <i class="fa-solid fa-user-pen"></i> Edit Profile Information
+                </a>
+                <a href="{{ url_for('model_performance') }}" class="dropdown-item">
+                    <i class="fa-solid fa-shield-halved"></i> Portfolio Risk Audit
+                </a>
+                <div class="dropdown-divider"></div>
+                <a href="{{ url_for('logout') }}" class="dropdown-item dropdown-logout">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+                </a>
             </div>
         </div>
     </div>
@@ -31,7 +58,7 @@
         <div class="stat-info">
             <span class="label">Total Predictions</span>
             <span class="value">{{ stats.total_predictions }}</span>
-            <span class="trend up"><i class="fa-solid fa-arrow-trend-up"></i> 12.4% from last month</span>
+            <span class="trend up"><i class="fa-solid fa-database"></i> All Recorded Applicants</span>
         </div>
     </div>
 
@@ -40,7 +67,7 @@
         <div class="stat-info">
             <span class="label">Approved Loans</span>
             <span class="value">{{ stats.approved_loans }}</span>
-            <span class="trend up"><i class="fa-solid fa-arrow-trend-up"></i> 10.7% from last month</span>
+            <span class="trend up"><i class="fa-solid fa-circle-check"></i> Non-Default Predictions</span>
         </div>
     </div>
 
@@ -49,7 +76,7 @@
         <div class="stat-info">
             <span class="label">Defaulted Loans</span>
             <span class="value">{{ stats.defaulted_loans }}</span>
-            <span class="trend up"><i class="fa-solid fa-arrow-trend-up"></i> 14.2% from last month</span>
+            <span class="trend down"><i class="fa-solid fa-triangle-exclamation"></i> High Default Risk</span>
         </div>
     </div>
 
@@ -58,16 +85,16 @@
         <div class="stat-info">
             <span class="label">Default Rate</span>
             <span class="value">{{ stats.default_rate }}%</span>
-            <span class="trend up"><i class="fa-solid fa-arrow-trend-up"></i> 2.3% from last month</span>
+            <span class="trend neutral"><i class="fa-solid fa-chart-pie"></i> Portfolio Ratio</span>
         </div>
     </div>
 
     <div class="card stat-card">
         <div class="icon-box orange"><i class="fa-solid fa-shield-halved"></i></div>
         <div class="stat-info">
-            <span class="label">Model Accuracy</span>
-            <span class="value">{{ stats.model_accuracy }}%</span>
-            <span class="trend up"><i class="fa-solid fa-arrow-trend-up"></i> 3.8% from last month</span>
+            <span class="label">Validation Benchmark</span>
+            <span class="value">89.67%</span>
+            <span class="trend up"><i class="fa-solid fa-bullseye"></i> Test Set (1,000 samples)</span>
         </div>
     </div>
 </div>
@@ -96,7 +123,7 @@
                 <strong>{{ stats.defaulted_loans }} ({{ stats.default_rate }}%)</strong>
             </div>
         </div>
-        <p class="chart-footer">Based on all predictions</p>
+        <p class="chart-footer">Empirical distribution across active portfolio</p>
     </div>
     
     <!-- 2. Default Risk Distribution (Bar) -->
@@ -107,21 +134,53 @@
         </div>
     </div>
     
-    <!-- 3. Model Performance (Line) -->
+    <!-- 3. Model Performance (Line) with Timeframe Controls -->
     <div class="card chart-card flex-2">
         <div class="card-header-flex">
-            <h3>Model Performance</h3>
+            <div>
+                <h3>Model Performance</h3>
+                <span class="subtext-small" id="perfPeriodSubtext">{{ performance.label }}</span>
+            </div>
             <div class="select-wrapper">
-                <select class="custom-select" id="timeframeSelect">
-                    <option>This Month</option>
-                    <option>Last 3 Months</option>
-                    <option>Year to Date</option>
+                <select class="custom-select" id="timeframeSelect" aria-label="Select Model Performance Timeframe">
+                    <option value="this_month" selected>This Month</option>
+                    <option value="last_3_months">Last 3 Months</option>
+                    <option value="year_to_date">Year to Date</option>
                 </select>
             </div>
         </div>
+
+        <!-- Metric Badges -->
+        <div class="perf-metric-bar" id="perfMetricBar">
+            <div class="perf-badge">
+                <span class="p-label">Accuracy:</span>
+                <strong id="perfAccuracyVal" class="p-val text-primary">{{ performance.accuracy_display }}</strong>
+            </div>
+            <div class="perf-badge">
+                <span class="p-label">Predictions:</span>
+                <strong id="perfTotalCount" class="p-val">{{ performance.total_predictions }}</strong>
+            </div>
+            <div class="perf-badge">
+                <span class="p-label">Verified Outcomes:</span>
+                <strong id="perfEvaluatedCount" class="p-val">{{ performance.evaluated_predictions }}</strong>
+            </div>
+            <div class="perf-badge">
+                <span class="p-label">Correct:</span>
+                <strong id="perfCorrectCount" class="p-val text-green">{{ performance.correct_predictions }}</strong>
+            </div>
+            <div class="perf-badge">
+                <span class="p-label">Incorrect:</span>
+                <strong id="perfIncorrectCount" class="p-val text-red">{{ performance.incorrect_predictions }}</strong>
+            </div>
+        </div>
+
         <div class="chart-container">
             <canvas id="modelPerformanceChart"></canvas>
         </div>
+
+        <p class="perf-footnote" id="perfFootnote">
+            <i class="fa-solid fa-circle-info"></i> <span id="perfFootnoteText">{{ performance.accuracy_message }}</span>
+        </p>
     </div>
 </div>
 
@@ -292,7 +351,8 @@
         defaulted: {{ stats.raw_defaulted }},
         total: {{ stats.raw_total }},
         defaultRate: {{ stats.default_rate }},
-        riskDistribution: {{ risk_distribution | tojson }}
+        riskDistribution: {{ risk_distribution | tojson }},
+        performance: {{ performance | tojson }}
     };
 </script>
 {% endblock %}

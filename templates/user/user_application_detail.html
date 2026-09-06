@@ -1,0 +1,238 @@
+{% extends 'user/user_base.html' %}
+{% block title %}Application {{ application.application_code }} - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="user-page-header">
+    <div class="header-info">
+        <h1><i class="fa-solid fa-file-lines"></i> Application {{ application.application_code }}</h1>
+        <p>Detailed tracking and documentation for your {{ application.loan_type }} loan application.</p>
+    </div>
+    <div class="header-action">
+        <a href="{{ url_for('user_applications') }}" class="btn-outline">
+            <i class="fa-solid fa-arrow-left"></i> All Applications
+        </a>
+    </div>
+</div>
+
+<!-- Status & Amount Overview -->
+<div class="user-metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 2rem;">
+    <div class="metric-card">
+        <div class="metric-icon-wrap bg-blue-light">
+            <i class="fa-solid fa-hashtag"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Application Code</span>
+            <h2 class="metric-value" style="font-size: 1.1rem;">{{ application.application_code }}</h2>
+        </div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-icon-wrap bg-teal-light">
+            <i class="fa-solid fa-indian-rupee-sign"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Loan Amount</span>
+            <h2 class="metric-value">₹{{ '{:,.0f}'.format(application.loan_amount or 0) }}</h2>
+        </div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-icon-wrap {{ 'bg-green-light' if application.status == 'Approved' else ('bg-orange-light' if application.status == 'Under Review' else ('bg-red-light' if application.status == 'Rejected' else 'bg-blue-light')) }}">
+            <i class="fa-solid fa-signal"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Current Status</span>
+            {% set status_lower = application.status|lower|replace(' ', '_') %}
+            <span class="status-tag status-{{ status_lower }}" style="font-size: 0.9rem;">
+                {{ application.status }}
+            </span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-icon-wrap bg-purple-light">
+            <i class="fa-solid fa-calendar-check"></i>
+        </div>
+        <div class="metric-body">
+            <span class="metric-label">Submitted On</span>
+            <h2 class="metric-value" style="font-size: 1rem;">{{ application.created_at[:10] if application.created_at else '—' }}</h2>
+        </div>
+    </div>
+</div>
+
+<!-- Timeline Tracker -->
+<div class="user-form-card">
+    <div class="form-section-title">
+        <i class="fa-solid fa-timeline"></i> Application Pipeline
+    </div>
+    {% set stages = ['Submitted', 'Under Review', 'Approved', 'Disbursed'] %}
+    {% set current_idx = 0 %}
+    {% for s in stages %}
+        {% if application.status == s %}
+            {% set current_idx = loop.index0 %}
+        {% endif %}
+    {% endfor %}
+    {% if application.status == 'Rejected' %}
+        {% set current_idx = 1 %}
+    {% endif %}
+
+    <div class="timeline-tracker">
+        {% for stage in stages %}
+        {% set idx = loop.index0 %}
+        {% if application.status == 'Rejected' and idx >= 2 %}
+        <div class="timeline-stage">
+            <div class="timeline-dot">
+                {% if idx == 2 %}
+                <i class="fa-solid fa-xmark" style="color: var(--c-red);"></i>
+                {% else %}
+                <i class="fa-solid fa-minus"></i>
+                {% endif %}
+            </div>
+            <span class="timeline-label">{{ 'Rejected' if idx == 2 else stage }}</span>
+        </div>
+        {% elif idx < current_idx or (idx == current_idx and application.status == stage) %}
+        <div class="timeline-stage {% if idx < current_idx %}completed{% elif idx == current_idx %}current{% endif %}">
+            <div class="timeline-dot">
+                {% if idx < current_idx %}
+                <i class="fa-solid fa-check"></i>
+                {% else %}
+                <i class="fa-solid fa-circle" style="font-size: 0.5rem;"></i>
+                {% endif %}
+            </div>
+            <span class="timeline-label">{{ stage }}</span>
+        </div>
+        {% else %}
+        <div class="timeline-stage">
+            <div class="timeline-dot">
+                <i class="fa-solid fa-circle" style="font-size: 0.4rem;"></i>
+            </div>
+            <span class="timeline-label">{{ stage }}</span>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Application Details Grid -->
+<div class="app-detail-grid" style="margin-top: 1.5rem;">
+    <!-- Loan Information -->
+    <div class="app-detail-section">
+        <h3><i class="fa-solid fa-file-invoice-dollar"></i> Loan Information</h3>
+        <div class="detail-field">
+            <span class="field-label">Loan Type</span>
+            <span class="field-value">{{ application.loan_type }}</span>
+        </div>
+        <div class="detail-field">
+            <span class="field-label">Amount</span>
+            <span class="field-value">₹{{ '{:,.0f}'.format(application.loan_amount or 0) }}</span>
+        </div>
+        <div class="detail-field">
+            <span class="field-label">Term</span>
+            <span class="field-value">{{ application.loan_term }} months</span>
+        </div>
+        <div class="detail-field">
+            <span class="field-label">Purpose</span>
+            <span class="field-value">{{ application.loan_purpose or application.loan_type }}</span>
+        </div>
+        {% if application.risk_assessment_id %}
+        <div class="detail-field">
+            <span class="field-label">Risk Assessment</span>
+            <span class="field-value">
+                <a href="{{ url_for('user_prediction_detail', prediction_id=application.risk_assessment_id) }}" style="color: var(--user-primary);">
+                    View #{{ application.risk_assessment_id }}
+                </a>
+            </span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Applicant Information -->
+    <div class="app-detail-section">
+        <h3><i class="fa-solid fa-user"></i> Applicant Details</h3>
+        {% set data = application.applicant_data if application.applicant_data is mapping else {} %}
+        <div class="detail-field">
+            <span class="field-label">Full Name</span>
+            <span class="field-value">{{ data.get('full_name', '—') if data else '—' }}</span>
+        </div>
+        <div class="detail-field">
+            <span class="field-label">Email</span>
+            <span class="field-value">{{ data.get('email', '—') if data else '—' }}</span>
+        </div>
+        <div class="detail-field">
+            <span class="field-label">Phone</span>
+            <span class="field-value">{{ data.get('phone', '—') if data else '—' }}</span>
+        </div>
+        <div class="detail-field">
+            <span class="field-label">Employment</span>
+            <span class="field-value">{{ data.get('employment_type', '—') if data else '—' }}</span>
+        </div>
+        <div class="detail-field">
+            <span class="field-label">Monthly Income</span>
+            <span class="field-value">₹{{ '{:,.0f}'.format(data.get('monthly_income', 0)|float) if data else '—' }}</span>
+        </div>
+        <div class="detail-field">
+            <span class="field-label">Credit Score</span>
+            <span class="field-value">{{ data.get('credit_score', '—') if data else '—' }}</span>
+        </div>
+    </div>
+
+    <!-- Documents -->
+    <div class="app-detail-section">
+        <h3><i class="fa-solid fa-paperclip"></i> Uploaded Documents</h3>
+        {% if documents %}
+        <div class="doc-list">
+            {% for doc in documents %}
+            <div class="doc-item">
+                <div class="doc-name">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <div>
+                        <strong>{{ doc.document_type }}</strong>
+                        <br><small style="color: var(--user-text-muted);">{{ doc.original_filename }}</small>
+                    </div>
+                </div>
+                <a href="{{ url_for('user_download_document', app_id=application.id, doc_id=doc.id) }}" class="doc-download">
+                    <i class="fa-solid fa-download"></i> Download
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="color: var(--user-text-muted); font-size: 0.9rem; padding: 1rem 0;">
+            <i class="fa-solid fa-info-circle"></i> No documents attached to this application.
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- Nominee & Bank -->
+    <div class="app-detail-section">
+        <h3><i class="fa-solid fa-building-columns"></i> Nominee & Banking</h3>
+        <div class="detail-field">
+            <span class="field-label">Nominee</span>
+            <span class="field-value">{{ data.get('nominee_name', '—') if data else '—' }}</span>
+        </div>
+        <div class="detail-field">
+            <span class="field-label">Relation</span>
+            <span class="field-value">{{ data.get('nominee_relation', '—') if data else '—' }}</span>
+        </div>
+        <div class="detail-field">
+            <span class="field-label">Bank</span>
+            <span class="field-value">{{ data.get('bank_name', '—') if data else '—' }}</span>
+        </div>
+        <div class="detail-field">
+            <span class="field-label">Account</span>
+            <span class="field-value">{{ data.get('account_number', '••••••')[-4:] if data and data.get('account_number') else '—' }}</span>
+        </div>
+        <div class="detail-field">
+            <span class="field-label">IFSC</span>
+            <span class="field-value">{{ data.get('ifsc_code', '—') if data else '—' }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Compliance Notice -->
+<div class="compliance-disclaimer" style="margin-top: 1.5rem;">
+    <i class="fa-solid fa-shield-halved"></i>
+    <div>
+        Your application is being processed securely. All personal data is encrypted and shared only with authorized financial institutions 
+        for the purpose of loan underwriting. For any queries, contact our support team through the 
+        <a href="{{ url_for('user_support') }}" style="color: #92400E; font-weight: 600;">Help & Support</a> page.
+    </div>
+</div>
+{% endblock %}

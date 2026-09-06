@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoanPredict AI — Explainable AI Loan Assessment & Assistance Platform</title>
+    <meta name="description" content="Transparent, AI-powered loan default risk assessment and borrower guidance platform using TreeSHAP and LIME explainability.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+</head>
+<body>
+
+    <!-- Sticky Navigation Header -->
+    <header class="landing-nav">
+        <a href="{{ url_for('landing') }}" class="nav-brand">
+            <div class="brand-logo">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div class="brand-title">
+                <h2>LoanPredict AI</h2>
+                <span>Explainable AI Platform</span>
+            </div>
+        </a>
+
+        <nav>
+            <ul class="nav-menu">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#loan-types">Loan Types</a></li>
+                <li><a href="#explainability">Explainable AI</a></li>
+                <li><a href="#security">Security & Trust</a></li>
+            </ul>
+        </nav>
+
+        <div class="nav-actions">
+            <a href="{{ url_for('login_user') }}" class="nav-btn btn-secondary">
+                <i class="fa-solid fa-user-check"></i> User Login
+            </a>
+            <a href="{{ url_for('login_admin') }}" class="nav-btn btn-dark">
+                <i class="fa-solid fa-shield-halved"></i> Admin Portal
+            </a>
+            <button class="mobile-menu-toggle" id="mobileMenuBtn" aria-label="Toggle Navigation Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main>
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-container">
+                <div class="hero-text-col">
+                    <div class="hero-badge-wrap">
+                        <div class="hero-badge">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Explainable AI &bull; Fair Lending Intelligence</span>
+                        </div>
+                    </div>
+                    
+                    <h1 class="hero-title">
+                        Transparent Loan Assessments Powered by <span class="gradient-text">Explainable AI</span>
+                    </h1>
+
+                    <p class="hero-subtitle">
+                        Evaluate your credit default risk before approaching banks or NBFCs. Receive instant, data-driven pre-assessments, inspect mathematical SHAP and LIME risk drivers, and optimize your financial profile with confidence.
+                    </p>
+
+                    <div class="hero-disclaimer-badge">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <div>
+                            <strong>Independent Pre-Assessment &amp; Guidance Platform:</strong>
+                            LoanPredict AI is an analytical technology platform and not a direct lender. We do not disburse funds or guarantee approvals; final loan sanctioning remains at the sole discretion of licensed lending institutions.
+                        </div>
+                    </div>
+
+                    <div class="hero-cta-group">
+                        <a href="{{ url_for('register_user') }}" class="btn-primary-lg">
+                            <i class="fa-solid fa-user-plus"></i> Create Free Account
+                        </a>
+                        <a href="{{ url_for('login_user') }}" class="btn-secondary-lg">
+                            <i class="fa-solid fa-arrow-right-to-bracket"></i> User Login
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Live-Feeling Sample Assessment Card -->
+                <div class="hero-visual-col">
+                    <div class="hero-card">
+                        <div class="hero-card-header">
+                            <div class="applicant-profile">
+                                <div class="avatar-badge">RS</div>
+                                <div class="applicant-info">
+                                    <h4>Rahul Sharma</h4>
+                                    <span>Home Loan Assessment &bull; 20-Year Term</span>
+                                </div>
+                            </div>
+                            <div class="assessment-status-badge">
+                                <i class="fa-solid fa-circle-check"></i> Low Risk
+                            </div>
+                        </div>
+
+                        <div class="hero-score-panel">
+                            <div class="score-panel-top">
+                                <span class="score-panel-title">AI Approval Probability</span>
+                                <span class="score-percent">88.4%</span>
+                            </div>
+                            <div class="score-progress-bar">
+                                <div class="score-fill"></div>
+                            </div>
+                            <div class="score-subtext">
+                                <span>Default Risk: Low (11.6%)</span>
+                                <span>Confidence: High (99.2%)</span>
+                            </div>
+                        </div>
+
+                        <div class="xai-drivers-block">
+                            <h5>
+                                <i class="fa-solid fa-bolt" style="color: #F59E0B;"></i>
+                                Key SHAP Attribution Factors:
+                            </h5>
+                            <div class="driver-item">
+                                <span class="driver-name"><i class="fa-solid fa-credit-card"></i> Credit Score (750)</span>
+                                <span class="impact-pos">+18.5% Approval Boost</span>
+                            </div>
+                            <div class="driver-item">
+                                <span class="driver-name"><i class="fa-solid fa-money-bill-trend-up"></i> Debt-to-Income (22%)</span>
+                                <span class="impact-pos">+12.2% Healthy Margin</span>
+                            </div>
+                            <div class="driver-item">
+                                <span class="driver-name"><i class="fa-solid fa-briefcase"></i> Experience (8 yrs Salaried)</span>
+                                <span class="impact-pos">+6.8% Stability</span>
+                            </div>
+                            <div class="driver-item">
+                                <span class="driver-name"><i class="fa-solid fa-scale-unbalanced"></i> Requested Amount (₹45L)</span>
+                                <span class="impact-neg">-4.1% Exposure Drag</span>
+                            </div>
+                        </div>
+
+                        <div class="hero-card-footer">
+                            <span class="xai-verif-tag">
+                                <i class="fa-solid fa-shield-check"></i> TreeSHAP Verified
+                            </span>
+                            <span>Model v2.4 &bull; XGBoost Calibrated</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Portals Direct Access Section -->
+        <section class="portals-section">
+            <div class="section-header-center">
+                <span class="section-tag">Dedicated Gateways</span>
+                <h2 class="section-title">Select Your Entry Portal</h2>
+                <p class="section-desc">
+                    LoanPredict AI maintains strict separation between individual borrower self-assessment and institutional risk administration.
+                </p>
+            </div>
+
+            <div class="portals-grid">
+                <!-- User Portal Card -->
+                <div class="portal-card user-portal-card">
+                    <div class="card-icon-wrap user-icon-bg">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <span class="portal-role-tag role-user">User &amp; Borrower Portal</span>
+                    <h3 class="card-title">Borrower Portal</h3>
+                    <p class="card-desc">
+                        Designed for individuals seeking clear loan pre-evaluations. Self-assess across 7 loan types, analyze positive/negative credit drivers, organize required documents, and get real-time advice.
+                    </p>
+                    <ul class="card-features">
+                        <li><i class="fa-solid fa-check"></i> Instant loan assessment across 7 loan categories</li>
+                        <li><i class="fa-solid fa-check"></i> Transparent SHAP waterfall &amp; LIME local explanations</li>
+                        <li><i class="fa-solid fa-check"></i> Actionable suggestions to improve approval odds</li>
+                        <li><i class="fa-solid fa-check"></i> Document checklist &amp; institution matchmaking</li>
+                    </ul>
+                    <div class="portal-actions-row">
+                        <a href="{{ url_for('login_user') }}" class="btn-portal btn-user">
+                            <i class="fa-solid fa-right-to-bracket"></i> User Login
+                        </a>
+                        <a href="{{ url_for('register_user') }}" class="btn-portal btn-user-alt">
+                            <i class="fa-solid fa-user-plus"></i> Register with Phone OTP
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Admin Portal Card -->
+                <div class="portal-card admin-portal-card">
+                    <div class="card-icon-wrap admin-icon-bg">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <span class="portal-role-tag role-admin">Institutional Risk Auditor</span>
+                    <h3 class="card-title">Admin Portal</h3>
+                    <p class="card-desc">
+                        Built for risk auditors, compliance officers, and institutional analysts. Monitor system-wide portfolio distributions, inspect model drift, verify ROC-AUC curves, and perform audits.
+                    </p>
+                    <ul class="card-features">
+                        <li><i class="fa-solid fa-check"></i> Institutional portfolio risk analytics &amp; metrics</li>
+                        <li><i class="fa-solid fa-check"></i> Model accuracy, ROC-AUC, Precision/Recall tracking</li>
+                        <li><i class="fa-solid fa-check"></i> Cross-applicant SHAP vs LIME comparative studio</li>
+                        <li><i class="fa-solid fa-check"></i> PDF and Word export of institutional audit reports</li>
+                    </ul>
+                    <div class="portal-actions-row">
+                        <a href="{{ url_for('login_admin') }}" class="btn-portal btn-admin">
+                            <i class="fa-solid fa-lock"></i> Enter Admin Portal
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Features Section (6 Cards) -->
+        <section class="features-section" id="features">
+            <div class="section-header-center">
+                <span class="section-tag">Platform Features</span>
+                <h2 class="section-title">Engineered for Fair, Transparent Lending</h2>
+                <p class="section-desc">
+                    Eliminate black-box frustration with advanced explainability algorithms and borrower-centric tools.
+                </p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon-box">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <h3 class="feature-title">Real-Time Risk Scoring</h3>
+                    <p class="feature-desc">
+                        Machine learning model calibrated on thousands of loan profiles to provide instant probability of default and approval outlook.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon-box">
+                        <i class="fa-solid fa-chart-column"></i>
+                    </div>
+                    <h3 class="feature-title">TreeSHAP Global Explanations</h3>
+                    <p class="feature-desc">
+                        Game-theoretic Shapley Additive Explanations calculate the exact positive or negative contribution of each financial metric.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon-box">
+                        <i class="fa-solid fa-microscope"></i>
+                    </div>
+                    <h3 class="feature-title">LIME Local Surrogates</h3>
+                    <p class="feature-desc">
+                        Local Interpretable Model-agnostic Explanations test local perturbations around your profile to verify prediction robustness.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon-box">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <h3 class="feature-title">7 Specialized Loan Categories</h3>
+                    <p class="feature-desc">
+                        Tailored risk parameters and underwriting factors for Home, Personal, Auto, Education, Business, Land, and Agricultural loans.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon-box">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                    </div>
+                    <h3 class="feature-title">Actionable Financial Advice</h3>
+                    <p class="feature-desc">
+                        Clear, step-by-step guidance on which parameters to adjust (e.g. loan tenure, down payment, co-applicant) to improve eligibility.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon-box">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
+                    </div>
+                    <h3 class="feature-title">Phone OTP Authentication</h3>
+                    <p class="feature-desc">
+                        Secure registration with cryptographic 6-digit phone OTP verification, ensuring authentic user accounts and fraud prevention.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works (4 Steps) -->
+        <section class="how-section" id="how-it-works">
+            <div class="section-header-center">
+                <span class="section-tag">Simple 4-Step Process</span>
+                <h2 class="section-title">How LoanPredict AI Works</h2>
+                <p class="section-desc">
+                    From registration to actionable loan intelligence in less than 3 minutes.
+                </p>
+            </div>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number-badge">1</div>
+                    <h3 class="step-title">Register &amp; Verify</h3>
+                    <p class="step-desc">
+                        Create your account in seconds using your email and mobile number. Confirm your phone with a fast 6-digit SMS OTP.
+                    </p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number-badge">2</div>
+                    <h3 class="step-title">Enter Profile Details</h3>
+                    <p class="step-desc">
+                        Input your employment status, monthly income, requested loan amount, term, and existing obligations with zero credit pull.
+                    </p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number-badge">3</div>
+                    <h3 class="step-title">Instant AI &amp; XAI Analysis</h3>
+                    <p class="step-desc">
+                        Get an immediate assessment with detailed SHAP and LIME visual breakdown explaining exactly why the score was determined.
+                    </p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number-badge">4</div>
+                    <h3 class="step-title">Plan &amp; Apply Confidently</h3>
+                    <p class="step-desc">
+                        Follow personalized recommendations, check document requirements, and approach lending institutions well prepared.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Supported Loan Categories (7 Types) -->
+        <section class="loan-types-section" id="loan-types">
+            <div class="section-header-center">
+                <span class="section-tag">Broad Coverage</span>
+                <h2 class="section-title">Supported Loan Categories</h2>
+                <p class="section-desc">
+                    Assess risk and explore customized explainability across seven core financing verticals.
+                </p>
+            </div>
+
+            <div class="loan-types-grid">
+                <div class="loan-type-card">
+                    <div class="loan-type-icon"><i class="fa-solid fa-house"></i></div>
+                    <h3 class="loan-type-name">Home Loans</h3>
+                    <p class="loan-type-desc">Long-term financing for purchasing or constructing residential property with property value collateral.</p>
+                    <div class="loan-type-footer">
+                        <span>Tenure: Up to 30 Yrs</span>
+                        <span>Collateral: Yes</span>
+                    </div>
+                </div>
+
+                <div class="loan-type-card">
+                    <div class="loan-type-icon"><i class="fa-solid fa-user-tag"></i></div>
+                    <h3 class="loan-type-name">Personal Loans</h3>
+                    <p class="loan-type-desc">Unsecured financing for medical, travel, wedding, or emergency needs based on salary and credit score.</p>
+                    <div class="loan-type-footer">
+                        <span>Tenure: 1 - 5 Yrs</span>
+                        <span>Collateral: No</span>
+                    </div>
+                </div>
+
+                <div class="loan-type-card">
+                    <div class="loan-type-icon"><i class="fa-solid fa-car"></i></div>
+                    <h3 class="loan-type-name">Vehicle / Auto Loans</h3>
+                    <p class="loan-type-desc">Secured financing for new and used two-wheelers, four-wheelers, or commercial vehicle purchases.</p>
+                    <div class="loan-type-footer">
+                        <span>Tenure: Up to 7 Yrs</span>
+                        <span>Collateral: Vehicle</span>
+                    </div>
+                </div>
+
+                <div class="loan-type-card">
+                    <div class="loan-type-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                    <h3 class="loan-type-name">Education Loans</h3>
+                    <p class="loan-type-desc">Financing tuition, accommodation, and study materials for higher education in India or abroad.</p>
+                    <div class="loan-type-footer">
+                        <span>Moratorium: Course + 1 Yr</span>
+                        <span>Co-Borrower: Yes</span>
+                    </div>
+                </div>
+
+                <div class="loan-type-card">
+                    <div class="loan-type-icon"><i class="fa-solid fa-briefcase"></i></div>
+                    <h3 class="loan-type-name">Business Loans</h3>
+                    <p class="loan-type-desc">Working capital, machinery purchases, and expansion capital for MSMEs and enterprise ventures.</p>
+                    <div class="loan-type-footer">
+                        <span>GST / P&amp;L Driven</span>
+                        <span>Custom Terms</span>
+                    </div>
+                </div>
+
+                <div class="loan-type-card">
+                    <div class="loan-type-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+                    <h3 class="loan-type-name">Land Purchase Loans</h3>
+                    <p class="loan-type-desc">Financing non-agricultural residential or commercial plot acquisitions for planned development.</p>
+                    <div class="loan-type-footer">
+                        <span>LTV: Up to 70%</span>
+                        <span>Collateral: Title Deed</span>
+                    </div>
+                </div>
+
+                <div class="loan-type-card">
+                    <div class="loan-type-icon"><i class="fa-solid fa-seedling"></i></div>
+                    <h3 class="loan-type-name">Agricultural Loans</h3>
+                    <p class="loan-type-desc">Specialized farm credit, equipment financing, crop loans, and rural infrastructure financing.</p>
+                    <div class="loan-type-footer">
+                        <span>Kisan Credit Aligned</span>
+                        <span>Subsidized Rates</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Explainable AI Comparison Section -->
+        <section class="xai-section" id="explainability">
+            <div class="section-header-center">
+                <span class="section-tag">Explainability Advantage</span>
+                <h2 class="section-title">Why Explainable AI Matters</h2>
+                <p class="section-desc">
+                    Traditional automated underwriting leaves borrowers in the dark. LoanPredict AI brings clarity to every decision.
+                </p>
+            </div>
+
+            <div class="comparison-grid">
+                <!-- Black-Box Card -->
+                <div class="comparison-card card-black-box">
+                    <h3><i class="fa-solid fa-triangle-exclamation"></i> Traditional Black-Box Systems</h3>
+                    <p style="color: var(--slate-text); font-size: 0.95rem;">Opaque algorithms used by conventional legacy lenders:</p>
+                    <ul class="comparison-list list-neg">
+                        <li><i class="fa-solid fa-xmark"></i> <strong>Zero Transparency:</strong> Borrowers are rejected with vague or generic reasons.</li>
+                        <li><i class="fa-solid fa-xmark"></i> <strong>Unexplained Penalties:</strong> Hidden biases or outdated score models negatively impact credit profiles.</li>
+                        <li><i class="fa-solid fa-xmark"></i> <strong>No Remediation Path:</strong> Leaves the applicant guessing what factors need improvement.</li>
+                        <li><i class="fa-solid fa-xmark"></i> <strong>Compliance Headaches:</strong> Institutions struggle to satisfy RBI and Fair Lending audit standards.</li>
+                    </ul>
+                </div>
+
+                <!-- Explainable Card -->
+                <div class="comparison-card card-xai-whitebox">
+                    <h3><i class="fa-solid fa-circle-check"></i> LoanPredict AI (Explainable AI)</h3>
+                    <p style="color: var(--slate-text); font-size: 0.95rem;">Fair, mathematically proven, human-interpretable credit intelligence:</p>
+                    <ul class="comparison-list list-pos">
+                        <li><i class="fa-solid fa-check"></i> <strong>Quantified Attribution:</strong> See exactly how much each parameter contributes to the final score.</li>
+                        <li><i class="fa-solid fa-check"></i> <strong>Dual Validation:</strong> Combines global TreeSHAP attributions with local LIME perturbations.</li>
+                        <li><i class="fa-solid fa-check"></i> <strong>Actionable Guidance:</strong> Specific simulations showing how small changes boost approval likelihood.</li>
+                        <li><i class="fa-solid fa-check"></i> <strong>Institutional Trust:</strong> Full auditability satisfying regulatory compliance requirements.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Security & Disclaimer Section -->
+        <section class="security-section" id="security">
+            <div class="security-container">
+                <div class="security-header">
+                    <h2>Bank-Grade Privacy &amp; Data Security</h2>
+                    <p>
+                        We treat your financial and personal data with stringent privacy standards. All passwords and OTP hashes are securely encrypted with industry-standard cryptographic primitives.
+                    </p>
+                    <div class="security-features">
+                        <div class="sec-feat"><i class="fa-solid fa-shield-check"></i> Bcrypt Password Hashing</div>
+                        <div class="sec-feat"><i class="fa-solid fa-key"></i> SHA-256 OTP Hash Storage</div>
+                        <div class="sec-feat"><i class="fa-solid fa-user-shield"></i> Strict Role-Based Isolation</div>
+                        <div class="sec-feat"><i class="fa-solid fa-ban"></i> Zero Data Resale Guarantee</div>
+                    </div>
+                </div>
+
+                <div class="disclaimer-card">
+                    <h4><i class="fa-solid fa-scale-balanced"></i> Important Platform Disclaimer</h4>
+                    <p>
+                        <strong>LoanPredict AI is an independent software application and educational technology platform.</strong> 
+                        We are not a bank, non-banking financial company (NBFC), or registered credit broker. 
+                        We do not originate, sanction, disburse, or guarantee any loan products. 
+                        Assessments provided on this platform are for informational and preparation purposes only. 
+                        Final approval, interest rates, and loan terms are determined solely by lending institutions following their independent credit policies.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="landing-footer">
+        <div class="footer-top">
+            <div class="footer-brand">
+                <h3>LoanPredict AI</h3>
+                <p>Explainable AI for loan default prediction, borrower self-assessment, and fair lending transparency.</p>
+                <p style="font-size: 0.8rem; color: #475569;">
+                    Powered by XGBoost, TreeSHAP, and LIME Local Interpretable Model-agnostic Explanations.
+                </p>
+            </div>
+
+            <div class="footer-col">
+                <h5>Platform Portals</h5>
+                <ul>
+                    <li><a href="{{ url_for('login_user') }}">User Login</a></li>
+                    <li><a href="{{ url_for('register_user') }}">User Registration</a></li>
+                    <li><a href="{{ url_for('verify_otp') }}">Phone Verification</a></li>
+                    <li><a href="{{ url_for('login_admin') }}">Administrator Portal</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h5>Loan Categories</h5>
+                <ul>
+                    <li><a href="#loan-types">Home Loans</a></li>
+                    <li><a href="#loan-types">Personal Loans</a></li>
+                    <li><a href="#loan-types">Vehicle / Auto Loans</a></li>
+                    <li><a href="#loan-types">Education &amp; Business</a></li>
+                    <li><a href="#loan-types">Land &amp; Agricultural</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h5>Technology &amp; Trust</h5>
+                <ul>
+                    <li><a href="#features">Platform Features</a></li>
+                    <li><a href="#how-it-works">How It Works</a></li>
+                    <li><a href="#explainability">TreeSHAP &amp; LIME</a></li>
+                    <li><a href="#security">Privacy &amp; Security</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <span>&copy; 2026 LoanPredict AI. All rights reserved.</span>
+            <span>Explainable AI Loan Default Prediction &amp; Borrower Assistance Platform</span>
+        </div>
+    </footer>
+
+    <!-- Mobile Nav Script -->
+    <script>
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        const navMenu = document.querySelector('.nav-menu');
+        if (mobileBtn && navMenu) {
+            mobileBtn.addEventListener('click', () => {
+                const isOpen = navMenu.style.display === 'flex';
+                navMenu.style.display = isOpen ? 'none' : 'flex';
+                if (!isOpen) {
+                    navMenu.style.flexDirection = 'column';
+                    navMenu.style.position = 'absolute';
+                    navMenu.style.top = '100%';
+                    navMenu.style.left = '0';
+                    navMenu.style.right = '0';
+                    navMenu.style.background = '#FFFFFF';
+                    navMenu.style.padding = '1.5rem';
+                    navMenu.style.borderBottom = '1px solid #E2E8F0';
+                    navMenu.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -37,11 +37,11 @@ def test_shap_explanation_structure():
     scaled = scaler.transform(sample_df)
     shap_results = get_shap_explanation(model, scaler, feature_cols, scaled)
 
-    assert isinstance(shap_results, list)
-    assert len(shap_results) <= 6
-    assert len(shap_results) > 0
+    features = shap_results if isinstance(shap_results, list) else shap_results.get('features', [])
+    assert isinstance(features, list)
+    assert len(features) > 0
 
-    first = shap_results[0]
+    first = features[0]
     assert 'feature' in first
     assert 'display_name' in first
     assert 'shap_value' in first

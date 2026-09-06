@@ -1,0 +1,334 @@
+{% extends 'user/user_base.html' %}
+{% block title %}Settings & Security - LoanPredict AI{% endblock %}
+
+{% block content %}
+<div class="user-page-header">
+    <div class="header-info">
+        <h1><i class="fa-solid fa-sliders"></i> Account Preferences & Security</h1>
+        <p>Manage real-time notifications, multi-factor security, data privacy, and platform appearance.</p>
+    </div>
+</div>
+
+<!-- Settings Navigation Tabs -->
+<div class="settings-tabs-bar">
+    <button class="settings-tab-btn active" onclick="switchSettingsTab('tab-notifications', this)">
+        <i class="fa-regular fa-bell"></i> Notifications & Alerts
+    </button>
+    <button class="settings-tab-btn" onclick="switchSettingsTab('tab-security', this)">
+        <i class="fa-solid fa-shield-halved"></i> Security & Sessions
+    </button>
+    <button class="settings-tab-btn" onclick="switchSettingsTab('tab-privacy', this)">
+        <i class="fa-solid fa-lock"></i> Privacy & XAI Exports
+    </button>
+    <button class="settings-tab-btn" onclick="switchSettingsTab('tab-display', this)">
+        <i class="fa-solid fa-palette"></i> Display & Locale
+    </button>
+    <button class="settings-tab-btn" onclick="switchSettingsTab('tab-data', this)">
+        <i class="fa-solid fa-database"></i> Data & Audit Trail
+    </button>
+</div>
+
+<form method="POST" action="{{ url_for('user_settings') }}" id="settingsForm">
+    <!-- Panel 1: Notifications -->
+    <div class="settings-tab-content active" id="tab-notifications">
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <h3><i class="fa-regular fa-envelope text-blue"></i> Email Notifications</h3>
+                <p>Choose when and how often LoanPredict AI contacts your primary email address.</p>
+            </div>
+
+            <div class="setting-toggle-row">
+                <div class="toggle-info">
+                    <div class="toggle-title">Loan Assessment Completion Alert</div>
+                    <div class="toggle-desc">Receive an immediate notification with PDF summary whenever a new loan prediction is computed.</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="notify_assessment" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-toggle-row">
+                <div class="toggle-info">
+                    <div class="toggle-title">Default Risk & Score Trajectory Alerts</div>
+                    <div class="toggle-desc">Notify you when your personal risk probability tier changes (e.g., from High Risk to Low Risk).</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="notify_risk_shift" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-toggle-row">
+                <div class="toggle-info">
+                    <div class="toggle-title">Monthly Financial Health Digest</div>
+                    <div class="toggle-desc">Receive an end-of-month recap showing credit score milestones and repayment recommendations.</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="notify_monthly_digest" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <h3><i class="fa-solid fa-mobile-screen text-blue"></i> SMS & Push Alerts</h3>
+                <p>Instant mobile notifications for time-sensitive security and loan events.</p>
+            </div>
+
+            <div class="setting-toggle-row">
+                <div class="toggle-info">
+                    <div class="toggle-title">SMS Security Verification Codes</div>
+                    <div class="toggle-desc">Send one-time SMS passcodes for sensitive account updates and login confirmations.</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="notify_sms_auth" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-toggle-row">
+                <div class="toggle-info">
+                    <div class="toggle-title">Underwriting Threshold Reminders</div>
+                    <div class="toggle-desc">Short notifications when optimal lending market conditions or lower benchmark interest rates become available.</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="notify_market_rates">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 2: Security & Sessions -->
+    <div class="settings-tab-content" id="tab-security">
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <h3><i class="fa-solid fa-key text-blue"></i> Authentication & Access Control</h3>
+                <p>Protect your borrower portal account and personal credit data.</p>
+            </div>
+
+            <div class="setting-toggle-row">
+                <div class="toggle-info">
+                    <div class="toggle-title">Two-Factor Authentication (2FA)</div>
+                    <div class="toggle-desc">Require an authentication code in addition to your password upon login.</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="enable_2fa">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-toggle-row">
+                <div class="toggle-info">
+                    <div class="toggle-title">Session Auto-Timeout</div>
+                    <div class="toggle-desc">Automatically sign out of the borrower portal after 30 minutes of inactivity.</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="session_timeout" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #F1F5F9; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong style="color: var(--user-navy); font-size: 0.95rem;">Password Management</strong>
+                    <p style="color: var(--user-text-muted); font-size: 0.85rem; margin: 0.2rem 0 0 0;">Last updated: Active session. Keep your credentials confidential.</p>
+                </div>
+                <a href="{{ url_for('user_profile') }}" class="btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 1rem;">
+                    <i class="fa-solid fa-lock"></i> Change Password
+                </a>
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <h3><i class="fa-solid fa-laptop text-blue"></i> Active Device Sessions</h3>
+                <p>Devices currently authenticated to your borrower account.</p>
+            </div>
+
+            <div class="device-session-item">
+                <div class="device-meta">
+                    <div class="device-icon-box">
+                        <i class="fa-solid fa-display"></i>
+                    </div>
+                    <div class="device-details">
+                        <h5>Current Windows Browser Session</h5>
+                        <span>IP: 127.0.0.1 • Location: Local Host • Active Now</span>
+                    </div>
+                </div>
+                <span class="badge-active-session"><i class="fa-solid fa-circle" style="font-size: 0.5rem;"></i> Current Session</span>
+            </div>
+
+            <div class="device-session-item">
+                <div class="device-meta">
+                    <div class="device-icon-box" style="background: #F1F5F9; color: #64748B;">
+                        <i class="fa-solid fa-mobile-screen"></i>
+                    </div>
+                    <div class="device-details">
+                        <h5>Mobile Safari / Chrome</h5>
+                        <span>Last active: Yesterday at 04:15 PM • Secure SSL</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-cancel" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;" onclick="this.closest('.device-session-item').remove();">
+                    Revoke
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 3: Privacy & XAI Exports -->
+    <div class="settings-tab-content" id="tab-privacy">
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <h3><i class="fa-solid fa-shield-halved text-blue"></i> Explainability Transparency Settings</h3>
+                <p>Control the granularity of algorithmic disclosures included in your downloadable loan records.</p>
+            </div>
+
+            <div class="setting-toggle-row">
+                <div class="toggle-info">
+                    <div class="toggle-title">Include SHAP Game-Theory Decompositions</div>
+                    <div class="toggle-desc">Append exact Shapley value contributions in exported PDF and Word audit dossiers.</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="export_shap_table" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-toggle-row">
+                <div class="toggle-info">
+                    <div class="toggle-title">Include LIME Local Surrogate Weights</div>
+                    <div class="toggle-desc">Attach local perturbation boundary equations to provide evidence for credit officers.</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="export_lime_table" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-toggle-row">
+                <div class="toggle-info">
+                    <div class="toggle-title">Anonymized Model Improvement Research</div>
+                    <div class="toggle-desc">Allow scrubbed, de-identified parameters to be utilized strictly for fairness and bias audits.</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="anonymized_telemetry" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 4: Display & Regional -->
+    <div class="settings-tab-content" id="tab-display">
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <h3><i class="fa-solid fa-palette text-blue"></i> Interface & Regional Formatting</h3>
+                <p>Customize your visual theme and currency representations.</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem;">
+                <div class="form-group">
+                    <label style="font-weight: 600; color: #1E293B; margin-bottom: 0.5rem; display: block;">Primary Currency</label>
+                    <select class="form-control" name="currency_format">
+                        <option value="INR" selected>Indian Rupee (₹ INR)</option>
+                        <option value="USD">US Dollar ($ USD)</option>
+                        <option value="EUR">Euro (€ EUR)</option>
+                        <option value="GBP">British Pound (£ GBP)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label style="font-weight: 600; color: #1E293B; margin-bottom: 0.5rem; display: block;">Date Format</label>
+                    <select class="form-control" name="date_format">
+                        <option value="DD-MM-YYYY" selected>DD-MMM-YYYY (e.g., 06 Sep 2026)</option>
+                        <option value="YYYY-MM-DD">YYYY-MM-DD (e.g., 2026-09-06)</option>
+                        <option value="MM-DD-YYYY">MM/DD/YYYY (e.g., 09/06/2026)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="setting-toggle-row" style="margin-top: 1.5rem;">
+                <div class="toggle-info">
+                    <div class="toggle-title">High Contrast Chart Rendering</div>
+                    <div class="toggle-desc">Render SHAP bar charts and risk donuts with enhanced visual contrast borders.</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="high_contrast_charts">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 5: Data & Audit Trail -->
+    <div class="settings-tab-content" id="tab-data">
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <h3><i class="fa-solid fa-file-export text-blue"></i> Data Portability & Audit Trail</h3>
+                <p>Download your complete machine learning prediction records for compliance and personal records.</p>
+            </div>
+
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+                <a href="{{ url_for('user_export_pdf') }}" class="btn-secondary" style="padding: 0.75rem 1.25rem;">
+                    <i class="fa-solid fa-file-pdf text-danger"></i> Export Official Audit PDF
+                </a>
+                <a href="{{ url_for('user_export_docx') }}" class="btn-secondary" style="padding: 0.75rem 1.25rem;">
+                    <i class="fa-solid fa-file-word text-blue"></i> Export Word (.docx) Audit Dossier
+                </a>
+            </div>
+        </div>
+
+        <div class="settings-card danger-zone-card">
+            <div class="settings-card-header">
+                <h3><i class="fa-solid fa-triangle-exclamation"></i> Danger Zone</h3>
+                <p style="color: #991B1B;">Irreversible actions regarding your borrower data and history.</p>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong style="color: #991B1B; font-size: 0.95rem;">Clear Application History</strong>
+                    <p style="color: #B91C1C; font-size: 0.85rem; margin: 0.2rem 0 0 0;">
+                        Delete all past simulated loan predictions and SHAP logs permanently.
+                    </p>
+                </div>
+                <button type="button" class="btn-cancel" style="border-color: #EF4444; color: #DC2626; font-weight: 600;" onclick="alert('For regulatory compliance, loan records are retained per standard banking guidelines. Contact compliance@loanpredict.ai for formal audit purge.');">
+                    Request Data Purge
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Bottom Actions Bar -->
+    <div style="margin-top: 2rem; display: flex; gap: 1rem; align-items: center;">
+        <button type="submit" class="btn-primary" style="padding: 0.85rem 2rem; font-size: 0.95rem;">
+            <i class="fa-solid fa-floppy-disk"></i> Save Preferences
+        </button>
+        <a href="{{ url_for('user_dashboard') }}" class="btn-cancel" style="padding: 0.85rem 1.5rem;">
+            Cancel
+        </a>
+        <span style="font-size: 0.85rem; color: var(--user-text-muted); margin-left: auto;">
+            <i class="fa-solid fa-shield-check text-success"></i> Changes encrypted and saved securely
+        </span>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function switchSettingsTab(tabId, btn) {
+    // Remove active from all tabs
+    document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
+
+    // Activate selected
+    btn.classList.add('active');
+    const target = document.getElementById(tabId);
+    if (target) {
+        target.classList.add('active');
+    }
+}
+</script>
+{% endblock %}

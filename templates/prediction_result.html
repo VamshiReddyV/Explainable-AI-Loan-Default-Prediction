@@ -12,8 +12,14 @@
         <a href="{{ url_for('history') }}" class="btn btn-secondary">
             <i class="fa-solid fa-arrow-left"></i> Back to History
         </a>
-        <a href="{{ url_for('new_prediction') }}" class="btn btn-primary">
-            <i class="fa-solid fa-circle-plus"></i> New Prediction
+        <a href="{{ url_for('shap_explanation', id=prediction.id) }}" class="btn btn-secondary">
+            <i class="fa-solid fa-asterisk"></i> SHAP
+        </a>
+        <a href="{{ url_for('lime_explanation', id=prediction.id) }}" class="btn btn-secondary">
+            <i class="fa-solid fa-crosshairs"></i> LIME
+        </a>
+        <a href="{{ url_for('explainability', id=prediction.id) }}" class="btn btn-primary">
+            <i class="fa-solid fa-code-compare"></i> Compare SHAP vs LIME
         </a>
     </div>
 </div>
